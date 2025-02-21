@@ -198,7 +198,7 @@ class Excel2Mapa:
         proxe =proyect.layoutManager()
         if lst := proxe.printLayouts():
             layout = lst[0]
-            layout.variablesChanged()
+            #layout.variablesChanged()
             exporter = QgsLayoutExporter(layout)
             export_path = os.path.join(self.plugin_dir, "map_composition.pdf")
             result = exporter.exportToPdf(export_path, QgsLayoutExporter.PdfExportSettings())

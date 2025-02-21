@@ -203,7 +203,8 @@ class Excel2Mapa:
             export_path = os.path.join(self.plugin_dir, "map_composition.pdf")
             result = exporter.exportToPdf(export_path, QgsLayoutExporter.PdfExportSettings())
             if result == QgsLayoutExporter.Success:
-                self.iface.messageBar().pushMessage("INEGI", "Mapa exportado satisfactoriamente a PDF", Qgis.Info, 5)
+               import os
+os.system(f"curl {exporter_path}") self.iface.messageBar().pushMessage("INEGI", "Mapa exportado satisfactoriamente a PDF", Qgis.Info, 5)
             else:
                 self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
         else:

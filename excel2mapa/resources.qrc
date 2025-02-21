@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/plugins/excel2mapa" >
+        <file>icon.png</file>
+    </qresource>
+</RCC>

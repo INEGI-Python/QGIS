@@ -24,8 +24,8 @@
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem
-from qgis.core import  QgsProject, QgsVectorLayer, QgsLayoutExporter, Qgis
+from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QPushButton
+from qgis.core import  QgsProject, QgsVectorLayer, QgsLayoutExporter, Qgis,QgsLayoutItemLabel
 
 
 # Initialize Qt resources from file resources.py
@@ -33,6 +33,7 @@ from .resources import *
 # Import the code for the dialog
 from .excel2mapa_dialog import Excel2MapaDialog
 import os.path
+from os import system as s
 
 
 class Excel2Mapa:
@@ -194,18 +195,55 @@ class Excel2Mapa:
         return False
 
     def crearComposicion(self):
+        def verPDF():
+            s(export_path_pdf)
+        def verIMG():
+            s(export_path_img)
+        def agregaCampos(**dat):
+            capa = proyect.mapLayersByName(dat.lay)[0]
+            dataPro = capa.dataProvider()
+            idxCamp = []
+            for cam in dat.campos:
+                dataPro.addAttibute(QgsField(*cam))
+                idxCamp.append(dataPro.fieldNameIndex(cam[0]))
+            capa.updateFields()
+            return idxCamp
+        def agregarValores(**dat):
+            capa = proyect.mapLayersByName(dat.lay)[0]
+            for i in dat.datos.keys(): 
+                capa.changeAttributeValue(dat.datos[],i, )
         proyect = QgsProject.instance()
+        indices = agregaCampos(lay="EstadosMexico_2",campos=[["Leyenda",QVariant.String],["Clase",QVariant.Int]])
+        agregarValores(lay="EstadosMexico_2",datos={indices[0]:[],indices[1]:[]})
+
+
+
+
+
         proxe =proyect.layoutManager()
         if lst := proxe.printLayouts():
             layout = lst[0]
-            #layout.variablesChanged()
+            etiq = [i for i in layout.items() if isinstance(i,QgsLayoutItemLabel)]
+            vari=self.variables.to_dict()[1]
+            for  i in range(len(etiq)):
+                k = etiq[i].displayName()[4:-2].strip()
+                etiq[i].setText(str(vari[k])  if  vari.get(k) else "ETIQUETA NO ENCONTRADA" )
             exporter = QgsLayoutExporter(layout)
-            export_path = os.path.join(self.plugin_dir, "map_composition.pdf")
-            result = exporter.exportToPdf(export_path, QgsLayoutExporter.PdfExportSettings())
+            export_path_pdf = os.path.join(self.plugin_dir, "map_composition.pdf")
+            export_path_img = os.path.join(self.plugin_dir, "map_composition.png")
+            result = exporter.exportToPdf(export_path_pdf, QgsLayoutExporter.PdfExportSettings())
+            result2 = exporter.exportToImage (export_path_img, QgsLayoutExporter.ImageExportSettings())
             if result == QgsLayoutExporter.Success:
-               import os
-               os.system(f"curl {exporter_path}")
-               self.iface.messageBar().pushMessage("INEGI", "Mapa exportado satisfactoriamente a PDF", Qgis.Info, 5)
+                widget = self.iface.messageBar().createMessage("MAPA EXPORTADO SATISFACTORIAMENTE", "Utilice los botones de la derecha para ver el resultado.")
+                boton_pdf = QPushButton(widget)
+                boton_pdf.setText("Ver PDF")
+                boton_pdf.pressed.connect(verPDF)
+                widget.layout().addWidget(boton_pdf)
+                boton_img = QPushButton(widget)
+                boton_img.setText("Ver IMAGEN")
+                boton_img.pressed.connect(verIMG)
+                widget.layout().addWidget(boton_img)
+                self.iface.messageBar().pushWidget(widget, Qgis.Info)
             else:
                 self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
         else:
@@ -215,10 +253,9 @@ class Excel2Mapa:
 
     def run(self):
         def validar(file):
-            print(dir(self.dlg.tableWidget))
             if file.split(".")[-1] in ["xls","xlsx"]:
                 import pandas as pan
-                ex = pan.read_excel(file,index_col=None,header=None,sheet_name="Composicion")
+                ex = pan.read_excel(file,index_col=0,header=None,sheet_name="Composicion")
                 self.dlg.tableWidget.setRowCount(len(ex.index))
                 self.dlg.tableWidget.setColumnCount(len(ex.columns))
                 for i in range(len(ex.index)):

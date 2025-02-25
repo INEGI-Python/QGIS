@@ -27,6 +27,17 @@ from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QPushButton
 from qgis.core import  QgsProject, QgsVectorLayer, QgsLayoutExporter, Qgis,QgsLayoutItemLabel,QgsField
 
+from qgis.core import (
+    QgsProject,
+    QgsField,
+    QgsRendererRange,
+    QgsGraduatedSymbolRenderer,
+    QgsRendererCategory,
+    QgsCategorizedSymbolRenderer,
+    QgsSymbol
+)
+from PyQt5.QtGui import QColor
+
 
 # Initialize Qt resources from file resources.py
 from .resources import *
@@ -34,6 +45,7 @@ from .resources import *
 from .excel2mapa_dialog import Excel2MapaDialog
 import os.path
 from os import system as s
+import shutil
 
 
 class Excel2Mapa:
@@ -51,7 +63,9 @@ class Excel2Mapa:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-        self.plantilla = f"{self.plugin_dir}/Plantilla_3_34.qgz"
+        self.original = f"{self.plugin_dir}/Plantilla_3_34.qgz"
+        self.copia = None
+
         # initialize locale
         locale = QSettings().value('locale/userLocale')[0:2]
         locale_path = os.path.join(
@@ -67,12 +81,20 @@ class Excel2Mapa:
         # Declare instance attributes
         self.actions = []
         self.menu = self.tr(u'&Excel 2 Mapa')
-        self.variables = None
+        self.variables = {}
         self.datosAct = None
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
 
+    @property
+    def Copia(self):
+        return self.copia
+    @Copia.setter
+    def Copia(self,valor):
+        os.remove(f"{self.plugin_dir}/{valor}.qgz") if os.path.exists(f"{self.plugin_dir}/{valor}.qgz") else None
+        self.copia = shutil.copyfile(self.original,f"{self.plugin_dir}/{valor}.qgz").replace("\\","/")
+    
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
         """Get the translation for a string using Qt translation API.
@@ -186,18 +208,31 @@ class Excel2Mapa:
             self.iface.removeToolBarIcon(action)
     
     def load_qgz_project(self):
-        import shutil
-        ruta_ori=self.plantilla.replace("\\","/")
-        if  os.path.exists(ruta_ori):
-            ruta = shutil.copy(ruta_ori,f"{self.plugin_dir}/copia_tmp.qgz",)
-            if QgsProject.instance().read(ruta):
-                self.iface.messageBar().pushMessage("INEGI",f"Proyecto  cargado Satisfactoriamente",Qgis.Info,5)
+        if  os.path.exists(self.Copia):
+            if QgsProject.instance().read(self.Copia):
+                self.iface.messageBar().pushMessage("INEGI","Proyecto cargado satisfactoriamente",Qgis.Info,5)
                 return True
-        self.iface.messageBar().pushMessage("INEGI",f" Ocurrio un error al cargar el proyecto o esta ruta:  {ruta} no existe.",Qgis.Critical,5)
+        self.iface.messageBar().pushMessage("INEGI","Error al cargar el proyecto",Qgis.Critical,5)
         return False
+    
+    def validar(self,file):
+        if file.split(".")[-1] in ["xls","xlsx"]:
+            import pandas as pan
+            ex = pan.read_excel(file,index_col=None,header=None,sheet_name="Composicion")
+            self.dlg.tableWidget.setRowCount(len(ex.index))
+            self.dlg.tableWidget.setColumnCount(len(ex.columns))
+            for i in range(len(ex.index)):
+                for j in range(len(ex.columns)):
+                    self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(str(ex.iat[i, j])))
+            self.iface.messageBar().pushMessage("Cargando Excel","Los  datos fueron cargados satisfactoriamente",Qgis.Info,5)
+            for i,v in ex.iterrows():
+                self.variables[v[0]] = v[1]
+            self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
+        else:
+            self.iface.messageBar().pushMessage("Cargando Excel","El archivo no es tipo Excel",Qgis.Critical,10)
+
 
     def crearComposicion(self):
-
         def agregaCampos(**dat):
             print(dat)
             capa = proyect.mapLayersByName(dat["lay"][0])[0]
@@ -207,7 +242,6 @@ class Excel2Mapa:
             capApagada = proyect.mapLayersByName(dat["lay"][1])[0]
             proyect.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False)       
             return [dataPro.fieldNameIndex(cam[0]) for cam in dat["campos"]]
-        
         def agregarValores(**dat):
             capa = proyect.mapLayersByName(dat["lay"][0])[0]
             capa.startEditing()
@@ -216,13 +250,48 @@ class Excel2Mapa:
                 capa.changeAttributeValue(i,dat["idxCampos"][1],vals[1])  
             capa.commitChanges()
 
+        def categorizar_layer(**dat):
+            capa = proyect.mapLayersByName(dat["lay"][0])[0]
+            unique_values = self.datosAct[newCampos[0]].unique()
+            categories = []
+            for value in unique_values:
+                symbol = QgsSymbol.defaultSymbol(capa.geometryType())
+                symbol.setColor(QColor('blue'))  # Set color as needed
+                category = QgsRendererCategory(value, symbol, str(value))
+                categories.append(category)
+            renderer = QgsGraduatedSymbolRenderer("clase", symbol)
+            renderer.setSourceColorRamp(QgsCategorizedSymbolRenderer.defaultColorRamp(QgsCategorizedSymbolRenderer.Blues))
+            renderer.updateColorRamp() 
+            renderer.updateSymbols(categories)
+            capa.setRenderer(renderer)
+            capa.triggerRepaint()
+
+
+
+        def graduar_layer(**dat):
+            capa = proyect.mapLayersByName(dat["lay"][0])[0]
+            ranges = [
+                (0, 10, 'Low', 'green'),
+                (11, 20, 'Medium', 'yellow'),
+                (21, 30, 'High', 'red')
+            ]
+            field = newCampos[1]
+            myRangeList = []
+            for lower, upper, label, color in ranges:
+                symbol = QgsSymbol.defaultSymbol(capa.geometryType())
+                symbol.setColor(QColor(color))
+                myRange = QgsRendererRange(lower, upper, symbol, label)
+                myRangeList.append(myRange)
+            renderer = QgsGraduatedSymbolRenderer(field, myRangeList)
+            renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
+            capa.setRenderer(renderer)
+            capa.triggerRepaint()
+
+
         def VerPdf():
-            s(f"start /WAIT {export_path_pdf}")   
+            os.startfile(export_path_pdf)
         def VerImg():
-            s(f"start /WAIT {export_path_img}")
-
-
-
+            os.startfile(export_path_img)
 
         proyect = QgsProject.instance()
         newCampos= list(self.datosAct.keys())
@@ -231,11 +300,12 @@ class Excel2Mapa:
         cap =  nomCapas if cantReg<=32 else nomCapas[::-1]
         indices = agregaCampos(lay=cap ,campos=[[newCampos[0],QVariant.String],[newCampos[1],QVariant.Int]])
         agregarValores(lay=cap,idxCampos=indices)
+        categorizar_layer(lay=cap)
         proxe =proyect.layoutManager()
         if lst := proxe.printLayouts():
             layout = lst[0]
             etiq = [i for i in layout.items() if isinstance(i,QgsLayoutItemLabel)]
-            vari=self.variables.to_dict()[1]
+            vari=self.variables
             for  i in range(len(etiq)):
                 k = etiq[i].displayName()[4:-2].strip()
                 etiq[i].setText(str(vari[k])  if  vari.get(k) else "ETIQUETA NO ENCONTRADA" )
@@ -262,38 +332,15 @@ class Excel2Mapa:
 
 
     def run(self):
-        def validar(file):
-            if file.split(".")[-1] in ["xls","xlsx"]:
-                import pandas as pan
-                ex = pan.read_excel(file,index_col=0,header=None,sheet_name="Composicion")
-                self.dlg.tableWidget.setRowCount(len(ex.index))
-                self.dlg.tableWidget.setColumnCount(len(ex.columns))
-                for i in range(len(ex.index)):
-                    for j in range(len(ex.columns)):
-                        self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(str(ex.iat[i, j])))
-                self.iface.messageBar().pushMessage("Cargando Excel","Los  datos fueron cargados satisfactoriamente",Qgis.Info,5)
-                self.variables = ex 
-                self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
-            else:
-                self.iface.messageBar().pushMessage("Cargando Excel","El archivo no es tipo Excel",Qgis.Critical,10)
-
-        """Run method that performs all the real work"""
-        # Create the dialog with elements (after translation) and keep reference
-        # Only create GUI ONCE in callback, so that it will only load when the plugin is started
         if self.first_start == True:
             self.first_start = False
             self.dlg = Excel2MapaDialog()
-        # show the dialog
         self.dlg.show()
+        self.Copia = "copia_tmp"
         self.load_qgz_project()    
-        self.dlg.mQgsFileWidget.fileChanged.connect(validar)
+        self.dlg.mQgsFileWidget.fileChanged.connect(self.validar)
 
-
-        # Run the dialog event loop
         result = self.dlg.exec_()
-        # See if OK was pressed
         if result:
-            # Do something useful here - delete the line containing pass and
-            # substitute with your code.
             self.crearComposicion()
             self.dlg.destroy()

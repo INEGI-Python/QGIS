@@ -1,0 +1,334 @@
+<!DOCTYPE qgis_style>
+<qgis_style version="2">
+  <symbols/>
+  <colorramps>
+    <colorramp type="preset" name="Categoria_4Categorias" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="95,164,140,255" type="QString" name="preset_color_0"/>
+        <Option value="225,138,215,255" type="QString" name="preset_color_1"/>
+        <Option value="172,151,255,255" type="QString" name="preset_color_2"/>
+        <Option value="128,183,164,255" type="QString" name="preset_color_3"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="4" type="QString" name="preset_color_name_3"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Categoria_6Categorias" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="95,164,140,255" type="QString" name="preset_color_0"/>
+        <Option value="225,138,215,255" type="QString" name="preset_color_1"/>
+        <Option value="172,151,255,255" type="QString" name="preset_color_2"/>
+        <Option value="128,183,164,255" type="QString" name="preset_color_3"/>
+        <Option value="238,183,231,255" type="QString" name="preset_color_4"/>
+        <Option value="194,179,255,255" type="QString" name="preset_color_5"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="4" type="QString" name="preset_color_name_3"/>
+        <Option value="5" type="QString" name="preset_color_name_4"/>
+        <Option value="6" type="QString" name="preset_color_name_5"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Colores_1_3Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="28,95,80,255" type="QString" name="preset_color_0"/>
+        <Option value="65,145,119,255" type="QString" name="preset_color_1"/>
+        <Option value="164,204,190,255" type="QString" name="preset_color_2"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Colores_2_3Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="99,66,255,255" type="QString" name="preset_color_0"/>
+        <Option value="150,125,255,255" type="QString" name="preset_color_1"/>
+        <Option value="216,206,255,255" type="QString" name="preset_color_2"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Colores_3_3Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="159,37,120,255" type="QString" name="preset_color_0"/>
+        <Option value="209,96,199,255" type="QString" name="preset_color_1"/>
+        <Option value="250,221,246,255" type="QString" name="preset_color_2"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Colores_4_3Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="183,47,5,255" type="QString" name="preset_color_0"/>
+        <Option value="240,130,66,255" type="QString" name="preset_color_1"/>
+        <Option value="255,231,216,255" type="QString" name="preset_color_2"/>
+        <Option value="#fa4b3c" type="QString" name="preset_color_name_0"/>
+        <Option value="#f08242" type="QString" name="preset_color_name_1"/>
+        <Option value="#ffe7d8" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_1_3Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="95,164,140,255" type="QString" name="preset_color_0"/>
+        <Option value="128,183,164,255" type="QString" name="preset_color_1"/>
+        <Option value="164,204,190,255" type="QString" name="preset_color_2"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_1_5Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="44,125,104,255" type="QString" name="preset_color_0"/>
+        <Option value="65,145,119,255" type="QString" name="preset_color_1"/>
+        <Option value="95,164,140,255" type="QString" name="preset_color_2"/>
+        <Option value="128,183,164,255" type="QString" name="preset_color_3"/>
+        <Option value="164,204,190,255" type="QString" name="preset_color_4"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="4" type="QString" name="preset_color_name_3"/>
+        <Option value="5" type="QString" name="preset_color_name_4"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_1_6Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="28,95,80,255" type="QString" name="preset_color_0"/>
+        <Option value="44,125,104,255" type="QString" name="preset_color_1"/>
+        <Option value="65,145,119,255" type="QString" name="preset_color_2"/>
+        <Option value="95,164,140,255" type="QString" name="preset_color_3"/>
+        <Option value="128,183,164,255" type="QString" name="preset_color_4"/>
+        <Option value="164,204,190,255" type="QString" name="preset_color_5"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="4" type="QString" name="preset_color_name_3"/>
+        <Option value="5" type="QString" name="preset_color_name_4"/>
+        <Option value="6" type="QString" name="preset_color_name_5"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_2_3Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="225,138,215,255" type="QString" name="preset_color_0"/>
+        <Option value="238,183,231,255" type="QString" name="preset_color_1"/>
+        <Option value="250,221,246,255" type="QString" name="preset_color_2"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_2_5Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="193,67,180,255" type="QString" name="preset_color_0"/>
+        <Option value="209,96,199,255" type="QString" name="preset_color_1"/>
+        <Option value="225,138,215,255" type="QString" name="preset_color_2"/>
+        <Option value="238,183,231,255" type="QString" name="preset_color_3"/>
+        <Option value="250,221,246,255" type="QString" name="preset_color_4"/>
+        <Option value="#fa4b3c" type="QString" name="preset_color_name_0"/>
+        <Option value="#d160c7" type="QString" name="preset_color_name_1"/>
+        <Option value="#e18ad7" type="QString" name="preset_color_name_2"/>
+        <Option value="#eeb7e7" type="QString" name="preset_color_name_3"/>
+        <Option value="#faddf6" type="QString" name="preset_color_name_4"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_2_6Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="159,37,120,255" type="QString" name="preset_color_0"/>
+        <Option value="193,67,180,255" type="QString" name="preset_color_1"/>
+        <Option value="209,96,199,255" type="QString" name="preset_color_2"/>
+        <Option value="225,138,215,255" type="QString" name="preset_color_3"/>
+        <Option value="238,183,231,255" type="QString" name="preset_color_4"/>
+        <Option value="250,221,246,255" type="QString" name="preset_color_5"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="4" type="QString" name="preset_color_name_3"/>
+        <Option value="5" type="QString" name="preset_color_name_4"/>
+        <Option value="6" type="QString" name="preset_color_name_5"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_3_3Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="172,151,255,255" type="QString" name="preset_color_0"/>
+        <Option value="194,179,255,255" type="QString" name="preset_color_1"/>
+        <Option value="216,206,255,255" type="QString" name="preset_color_2"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_3_5Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="133,104,255,255" type="QString" name="preset_color_0"/>
+        <Option value="150,125,255,255" type="QString" name="preset_color_1"/>
+        <Option value="172,151,255,255" type="QString" name="preset_color_2"/>
+        <Option value="194,179,255,255" type="QString" name="preset_color_3"/>
+        <Option value="216,206,255,255" type="QString" name="preset_color_4"/>
+        <Option value="#fa4b3c" type="QString" name="preset_color_name_0"/>
+        <Option value="#967d77" type="QString" name="preset_color_name_1"/>
+        <Option value="#ac97ff" type="QString" name="preset_color_name_2"/>
+        <Option value="#c2b3ff" type="QString" name="preset_color_name_3"/>
+        <Option value="#d8ceff" type="QString" name="preset_color_name_4"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_3_6Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="99,66,255,255" type="QString" name="preset_color_0"/>
+        <Option value="133,104,255,255" type="QString" name="preset_color_1"/>
+        <Option value="150,125,255,255" type="QString" name="preset_color_2"/>
+        <Option value="172,151,255,255" type="QString" name="preset_color_3"/>
+        <Option value="194,179,255,255" type="QString" name="preset_color_4"/>
+        <Option value="216,206,255,255" type="QString" name="preset_color_5"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="4" type="QString" name="preset_color_name_3"/>
+        <Option value="5" type="QString" name="preset_color_name_4"/>
+        <Option value="6" type="QString" name="preset_color_name_5"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_4_3Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="248,167,116,255" type="QString" name="preset_color_0"/>
+        <Option value="253,204,168,255" type="QString" name="preset_color_1"/>
+        <Option value="255,231,216,255" type="QString" name="preset_color_2"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_4_5Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="226,108,59,255" type="QString" name="preset_color_0"/>
+        <Option value="240,130,66,255" type="QString" name="preset_color_1"/>
+        <Option value="248,167,116,255" type="QString" name="preset_color_2"/>
+        <Option value="253,204,168,255" type="QString" name="preset_color_3"/>
+        <Option value="255,231,216,255" type="QString" name="preset_color_4"/>
+        <Option value="#fa4b3c" type="QString" name="preset_color_name_0"/>
+        <Option value="#f08242" type="QString" name="preset_color_name_1"/>
+        <Option value="#f8a774" type="QString" name="preset_color_name_2"/>
+        <Option value="#fdcca8" type="QString" name="preset_color_name_3"/>
+        <Option value="#ffe7d8" type="QString" name="preset_color_name_4"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Coroplético_4_6Intervalos" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="183,47,5,255" type="QString" name="preset_color_0"/>
+        <Option value="226,108,59,255" type="QString" name="preset_color_1"/>
+        <Option value="240,130,66,255" type="QString" name="preset_color_2"/>
+        <Option value="248,167,116,255" type="QString" name="preset_color_3"/>
+        <Option value="253,204,168,255" type="QString" name="preset_color_4"/>
+        <Option value="255,231,216,255" type="QString" name="preset_color_5"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="4" type="QString" name="preset_color_name_3"/>
+        <Option value="5" type="QString" name="preset_color_name_4"/>
+        <Option value="6" type="QString" name="preset_color_name_5"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Divergente_1_3Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="255,206,117,255" type="QString" name="preset_color_0"/>
+        <Option value="164,204,190,255" type="QString" name="preset_color_1"/>
+        <Option value="128,183,164,255" type="QString" name="preset_color_2"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Divergente_1_5Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="255,206,117,255" type="QString" name="preset_color_0"/>
+        <Option value="250,233,154,255" type="QString" name="preset_color_1"/>
+        <Option value="164,204,190,255" type="QString" name="preset_color_2"/>
+        <Option value="128,183,164,255" type="QString" name="preset_color_3"/>
+        <Option value="95,164,140,255" type="QString" name="preset_color_4"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="4" type="QString" name="preset_color_name_3"/>
+        <Option value="5" type="QString" name="preset_color_name_4"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Divergente_2_3Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="225,138,215,255" type="QString" name="preset_color_0"/>
+        <Option value="164,204,190,255" type="QString" name="preset_color_1"/>
+        <Option value="128,183,164,255" type="QString" name="preset_color_2"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Divergente_2_5Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="225,138,215,255" type="QString" name="preset_color_0"/>
+        <Option value="238,183,231,255" type="QString" name="preset_color_1"/>
+        <Option value="164,204,190,255" type="QString" name="preset_color_2"/>
+        <Option value="128,183,164,255" type="QString" name="preset_color_3"/>
+        <Option value="95,164,140,255" type="QString" name="preset_color_4"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="4" type="QString" name="preset_color_name_3"/>
+        <Option value="5" type="QString" name="preset_color_name_4"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Divergente_3_3Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="128,183,164,255" type="QString" name="preset_color_0"/>
+        <Option value="255,206,117,255" type="QString" name="preset_color_1"/>
+        <Option value="209,75,93,255" type="QString" name="preset_color_2"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="3" type="QString" name="preset_color_name_1"/>
+        <Option value="2" type="QString" name="preset_color_name_2"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+    <colorramp type="preset" name="Divergente_3_5Breaks" tags="MapasInegi2025_V1">
+      <Option type="Map">
+        <Option value="209,75,93,255" type="QString" name="preset_color_0"/>
+        <Option value="248,167,116,255" type="QString" name="preset_color_1"/>
+        <Option value="255,206,117,255" type="QString" name="preset_color_2"/>
+        <Option value="128,183,164,255" type="QString" name="preset_color_3"/>
+        <Option value="95,164,140,255" type="QString" name="preset_color_4"/>
+        <Option value="1" type="QString" name="preset_color_name_0"/>
+        <Option value="2" type="QString" name="preset_color_name_1"/>
+        <Option value="3" type="QString" name="preset_color_name_2"/>
+        <Option value="4" type="QString" name="preset_color_name_3"/>
+        <Option value="5" type="QString" name="preset_color_name_4"/>
+        <Option value="preset" type="QString" name="rampType"/>
+      </Option>
+    </colorramp>
+  </colorramps>
+  <textformats/>
+  <labelsettings/>
+  <legendpatchshapes/>
+  <symbols3d/>
+</qgis_style>

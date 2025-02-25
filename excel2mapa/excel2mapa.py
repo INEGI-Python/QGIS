@@ -203,13 +203,13 @@ class Excel2Mapa:
             capa = proyect.mapLayersByName(dat["lay"][0])[0]
             dataPro = capa.dataProvider()
             dataPro.addAttributes([QgsField(*cam) for cam in dat["campos"]])
-            capa.updateFields()            
+            capa.updateFields()    
             capApagada = proyect.mapLayersByName(dat["lay"][1])[0]
-            capApagada.setSubLayerVisibility(False)
+            proyect.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False)       
             return [dataPro.fieldNameIndex(cam[0]) for cam in dat["campos"]]
         
         def agregarValores(**dat):
-            capa = proyect.mapLayersByName(dat["lay"])[0]
+            capa = proyect.mapLayersByName(dat["lay"][0])[0]
             capa.startEditing()
             for i,vals in self.datosAct.iterrows():
                 capa.changeAttributeValue(i,dat["idxCampos"][0],vals[0])

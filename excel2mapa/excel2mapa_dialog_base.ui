@@ -6,13 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-<<<<<<< HEAD
-    <width>471</width>
-    <height>478</height>
-=======
-    <width>479</width>
-    <height>530</height>
->>>>>>> 47f33193abfe54378fe1cdd5627ca760e542f956
+    <width>469</width>
+    <height>491</height>
    </rect>
   </property>
   <property name="font">
@@ -32,11 +27,7 @@
   <widget class="QToolBox" name="toolBox">
    <property name="geometry">
     <rect>
-<<<<<<< HEAD
-     <x>0</x>
-=======
-     <x>20</x>
->>>>>>> 47f33193abfe54378fe1cdd5627ca760e542f956
+     <x>10</x>
      <y>10</y>
      <width>441</width>
      <height>461</height>
@@ -51,179 +42,12 @@
       <x>0</x>
       <y>0</y>
       <width>441</width>
-<<<<<<< HEAD
-      <height>407</height>
-     </rect>
-    </property>
-    <attribute name="label">
-     <string> Qgs-INEGI</string>
-    </attribute>
-    <widget class="QDial" name="verde">
-     <property name="geometry">
-      <rect>
-       <x>380</x>
-       <y>220</y>
-       <width>50</width>
-       <height>64</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(30, 255, 26);</string>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_2">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>50</y>
-       <width>401</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="text">
-      <string>Seleccione el archivo excel que contiene los datos del Mapa</string>
-     </property>
-    </widget>
-    <widget class="QgsFileWidget" name="mQgsFileWidget">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>70</y>
-       <width>251</width>
-       <height>27</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QTableWidget" name="tableWidget">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>110</y>
-       <width>251</width>
-       <height>131</height>
-      </rect>
-     </property>
-     <column>
-      <property name="text">
-       <string>variable</string>
-      </property>
-      <property name="font">
-       <font>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-     </column>
-     <column>
-      <property name="text">
-       <string>valor</string>
-      </property>
-      <property name="font">
-       <font>
-        <weight>75</weight>
-        <bold>true</bold>
-       </font>
-      </property>
-     </column>
-    </widget>
-    <widget class="QgsMapLayerComboBox" name="mMapLayerComboBox">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>0</y>
-       <width>251</width>
-       <height>27</height>
-      </rect>
-     </property>
-    </widget>
-    <widget class="QDialogButtonBox" name="button_box">
-     <property name="geometry">
-      <rect>
-       <x>330</x>
-       <y>380</y>
-       <width>101</width>
-       <height>32</height>
-      </rect>
-     </property>
-     <property name="orientation">
-      <enum>Qt::Horizontal</enum>
-     </property>
-     <property name="standardButtons">
-      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Yes</set>
-     </property>
-    </widget>
-    <widget class="QLabel" name="label_3">
-     <property name="geometry">
-      <rect>
-       <x>10</x>
-       <y>380</y>
-       <width>301</width>
-       <height>21</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Century Gothic</family>
-       <pointsize>10</pointsize>
-       <weight>75</weight>
-       <italic>true</italic>
-       <bold>true</bold>
-      </font>
-     </property>
-     <property name="text">
-      <string>Desea utilizar estos datos para crear el mapa?</string>
-     </property>
-    </widget>
-    <widget class="QDial" name="rojo">
-     <property name="geometry">
-      <rect>
-       <x>380</x>
-       <y>150</y>
-       <width>50</width>
-       <height>64</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(255, 62, 23);</string>
-     </property>
-    </widget>
-    <widget class="QDial" name="azul">
-     <property name="geometry">
-      <rect>
-       <x>380</x>
-       <y>290</y>
-       <width>50</width>
-       <height>64</height>
-      </rect>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">background-color: rgb(32, 91, 255);</string>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-     <property name="value">
-      <number>16</number>
-=======
-      <height>401</height>
+      <height>399</height>
      </rect>
     </property>
     <attribute name="label">
      <string>Datos a utlizar</string>
     </attribute>
-    <widget class="QDial" name="rojo">
-     <property name="geometry">
-      <rect>
-       <x>60</x>
-       <y>250</y>
-       <width>41</width>
-       <height>51</height>
-      </rect>
-     </property>
-     <property name="maximum">
-      <number>255</number>
-     </property>
-    </widget>
     <widget class="QTableWidget" name="tableWidget">
      <property name="geometry">
       <rect>
@@ -311,43 +135,9 @@ pt &quot;Mongolian Baiti&quot;;</string>
        <width>371</width>
        <height>21</height>
       </rect>
->>>>>>> 47f33193abfe54378fe1cdd5627ca760e542f956
      </property>
      <property name="text">
       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt; font-weight:600; color:#626262;&quot;&gt;Seleccione el archivo excel que contiene los datos del Mapa&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
-    <widget class="QLCDNumber" name="lcd_rojo">
-     <property name="geometry">
-      <rect>
-       <x>30</x>
-       <y>300</y>
-       <width>81</width>
-       <height>31</height>
-      </rect>
-     </property>
-     <property name="font">
-      <font>
-       <family>Cascadia Mono</family>
-      </font>
-     </property>
-     <property name="cursor">
-      <cursorShape>ArrowCursor</cursorShape>
-     </property>
-     <property name="styleSheet">
-      <string notr="true">color: rgb(255, 0, 0);</string>
-     </property>
-     <property name="smallDecimalPoint">
-      <bool>true</bool>
-     </property>
-     <property name="mode">
-      <enum>QLCDNumber::Dec</enum>
-     </property>
-     <property name="value" stdset="0">
-      <double>255.000000000000000</double>
-     </property>
-     <property name="intValue" stdset="0">
-      <number>255</number>
      </property>
     </widget>
     <widget class="QDialogButtonBox" name="btn_si">
@@ -388,6 +178,134 @@ pt &quot;Mongolian Baiti&quot;;</string>
       <string>¿Desea utilizar estos datos para crear el mapa?</string>
      </property>
     </widget>
+    <widget class="QComboBox" name="comboRampas">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>270</y>
+       <width>211</width>
+       <height>22</height>
+      </rect>
+     </property>
+     <property name="editable">
+      <bool>true</bool>
+     </property>
+     <item>
+      <property name="text">
+       <string>seleccione la rampa de color a utilizar</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QLabel" name="label">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>250</y>
+       <width>101</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <pointsize>9</pointsize>
+       <weight>75</weight>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>Rampa de Color</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="rampa1">
+     <property name="geometry">
+      <rect>
+       <x>170</x>
+       <y>300</y>
+       <width>21</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-top-color: rgb(0, 0, 0);
+border-bottom-color: rgb(0, 0, 0);
+</string>
+     </property>
+     <property name="text">
+      <string>1</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="rampa2">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>300</y>
+       <width>21</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-top-color: rgb(0, 0, 0);
+border-bottom-color: rgb(0, 0, 0);
+</string>
+     </property>
+     <property name="text">
+      <string>2</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="rampa3">
+     <property name="geometry">
+      <rect>
+       <x>210</x>
+       <y>300</y>
+       <width>21</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-top-color: rgb(0, 0, 0);
+border-bottom-color: rgb(0, 0, 0);
+</string>
+     </property>
+     <property name="text">
+      <string>3</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="rampa4">
+     <property name="geometry">
+      <rect>
+       <x>230</x>
+       <y>300</y>
+       <width>21</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-top-color: rgb(0, 0, 0);
+border-bottom-color: rgb(0, 0, 0);
+</string>
+     </property>
+     <property name="text">
+      <string>4</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="rampa5">
+     <property name="geometry">
+      <rect>
+       <x>250</x>
+       <y>300</y>
+       <width>21</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">border-top-color: rgb(0, 0, 0);
+border-bottom-color: rgb(0, 0, 0);
+</string>
+     </property>
+     <property name="text">
+      <string>5</string>
+     </property>
+    </widget>
    </widget>
    <widget class="QWidget" name="page_4">
     <property name="geometry">
@@ -395,37 +313,67 @@ pt &quot;Mongolian Baiti&quot;;</string>
       <x>0</x>
       <y>0</y>
       <width>441</width>
-      <height>401</height>
+      <height>399</height>
      </rect>
     </property>
     <attribute name="label">
      <string>Page 2</string>
     </attribute>
+    <widget class="QDial" name="rojo">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>140</y>
+       <width>41</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QLCDNumber" name="lcd_rojo">
+     <property name="geometry">
+      <rect>
+       <x>40</x>
+       <y>220</y>
+       <width>81</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Cascadia Mono</family>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>ArrowCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(255, 0, 0);</string>
+     </property>
+     <property name="smallDecimalPoint">
+      <bool>true</bool>
+     </property>
+     <property name="mode">
+      <enum>QLCDNumber::Dec</enum>
+     </property>
+     <property name="value" stdset="0">
+      <double>255.000000000000000</double>
+     </property>
+     <property name="intValue" stdset="0">
+      <number>255</number>
+     </property>
+    </widget>
    </widget>
   </widget>
  </widget>
  <customwidgets>
   <customwidget>
-<<<<<<< HEAD
-=======
-   <class>QgsDateTimeEdit</class>
-   <extends>QDateTimeEdit</extends>
-   <header>qgsdatetimeedit.h</header>
-  </customwidget>
-  <customwidget>
->>>>>>> 47f33193abfe54378fe1cdd5627ca760e542f956
    <class>QgsFileWidget</class>
    <extends>QWidget</extends>
    <header>qgsfilewidget.h</header>
   </customwidget>
-<<<<<<< HEAD
-  <customwidget>
-   <class>QgsMapLayerComboBox</class>
-   <extends>QComboBox</extends>
-   <header>qgsmaplayercombobox.h</header>
-  </customwidget>
-=======
->>>>>>> 47f33193abfe54378fe1cdd5627ca760e542f956
  </customwidgets>
  <resources/>
  <connections>

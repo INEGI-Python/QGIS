@@ -83,6 +83,8 @@ class Excel2Mapa:
         self.menu = self.tr(u'&Excel 2 Mapa')
         self.variables = {}
         self.datosAct = None
+        self.categorias = None
+        self.colorRampa = ["255,255,255,255","255,255,255,255","255,255,255,255","255,255,255,255","255,255,255,255"]
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
@@ -228,6 +230,8 @@ class Excel2Mapa:
             for i,v in ex.iterrows():
                 self.variables[v[0]] = v[1]
             self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
+            self.categorias = len(list(self.datosAct["Clase"].unique()))
+            self.rampasColor()
         else:
             self.iface.messageBar().pushMessage("Cargando Excel","El archivo no es tipo Excel",Qgis.Critical,10)
 
@@ -237,7 +241,7 @@ class Excel2Mapa:
             print(dat)
             capa = proyect.mapLayersByName(dat["lay"][0])[0]
             dataPro = capa.dataProvider()
-            dataPro.addAttributes([QgsField(*cam) for cam in dat["campos"]] if cam[0] not in [field.name() for field in dataPro.fields()] else None)
+            dataPro.addAttributes([QgsField(*cam) for cam in dat["campos"] if cam[0] not in [field.name() for field in dataPro.fields()]])
             capa.updateFields()    
             capApagada = proyect.mapLayersByName(dat["lay"][1])[0]
             proyect.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False)       
@@ -263,34 +267,12 @@ class Excel2Mapa:
                 symbol.setColor(QColor('blue'))  # Set color as needed
                 category = QgsRendererCategory(value, symbol, str(value))
                 categories.append(category)
-            renderer = QgsGraduatedSymbolRenderer("clase", symbol)
-            renderer.setSourceColorRamp(QgsCategorizedSymbolRenderer.defaultColorRamp(QgsCategorizedSymbolRenderer.Blues))
-            renderer.updateColorRamp() 
-            renderer.updateSymbols(categories)
-            capa.setRenderer(renderer)
+            renderer = QgsCategorizedSymbolRenderer(newCampos[0], categories)
+            capa.setRenderer(renderer)  
             capa.triggerRepaint()
 
 
-
-        def graduar_layer(**dat):
-            capa = proyect.mapLayersByName(dat["lay"][0])[0]
-            ranges = [
-                (0, 10, 'Low', 'green'),
-                (11, 20, 'Medium', 'yellow'),
-                (21, 30, 'High', 'red')
-            ]
-            field = newCampos[1]
-            myRangeList = []
-            for lower, upper, label, color in ranges:
-                symbol = QgsSymbol.defaultSymbol(capa.geometryType())
-                symbol.setColor(QColor(color))
-                myRange = QgsRendererRange(lower, upper, symbol, label)
-                myRangeList.append(myRange)
-            renderer = QgsGraduatedSymbolRenderer(field, myRangeList)
-            renderer.setMode(QgsGraduatedSymbolRenderer.EqualInterval)
-            capa.setRenderer(renderer)
-            capa.triggerRepaint()
-
+        
 
         def VerPdf():
             os.startfile(export_path_pdf)
@@ -333,8 +315,31 @@ class Excel2Mapa:
                 self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
         else:
             self.iface.messageBar().pushMessage("INEGI", "No se encontró ninguna composición de mapa", Qgis.Warning, 5)
+
+
     def cambiarValor(self,valor):
         print(valor)
+    
+    def seleccRampa(self):
+        color=[]
+        for r in self.colorRampa:
+            if r["nombre"] == self.dlg.comboRampas.currentText():
+                color = r["colores"]
+                break
+        print(color)
+        for i in range(len(color)):
+            print(color[i])
+            eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba({color[i]});')")
+            
+    
+    def rampasColor(self):
+        import json
+        js=open(f"{self.plugin_dir}/styles-INEGI.json","r")
+        rampas = json.load(js)["qgis_style"]["colorramps"]
+        self.colorRampa = [{"nombre": r["name"],"colores":list(r["options"].values())[:self.categorias]}  for r in rampas if (len(list((r["options"].keys())))-1)/2 ==self.categorias]
+        self.dlg.comboRampas.clear()
+        for rampa in self.colorRampa:
+            self.dlg.comboRampas.addItem(rampa["nombre"])
 
     def run(self):
         if self.first_start == True:
@@ -345,7 +350,7 @@ class Excel2Mapa:
         self.load_qgz_project()    
         self.dlg.mQgsFileWidget.fileChanged.connect(self.validar)
         self.dlg.rojo.valueChanged.connect(self.cambiarValor)
-
+        self.dlg.comboRampas.currentTextChanged.connect(self.seleccRampa)
         result = self.dlg.exec_()
         if result:
             self.crearComposicion()

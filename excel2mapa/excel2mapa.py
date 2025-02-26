@@ -237,11 +237,15 @@ class Excel2Mapa:
             print(dat)
             capa = proyect.mapLayersByName(dat["lay"][0])[0]
             dataPro = capa.dataProvider()
-            dataPro.addAttributes([QgsField(*cam) for cam in dat["campos"]])
+            dataPro.addAttributes([QgsField(*cam) for cam in dat["campos"]] if cam[0] not in [field.name() for field in dataPro.fields()] else None)
             capa.updateFields()    
             capApagada = proyect.mapLayersByName(dat["lay"][1])[0]
             proyect.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False)       
-            return [dataPro.fieldNameIndex(cam[0]) for cam in dat["campos"]]
+            idx_new =  [dataPro.fieldNameIndex(cam[0]) for cam in dat["campos"]]
+            for i in range(capa.featureCount()):
+                for idx in idx_new:
+                    capa.changeAttributeValue(i, idx, None)
+            return idx_new
         def agregarValores(**dat):
             capa = proyect.mapLayersByName(dat["lay"][0])[0]
             capa.startEditing()
@@ -329,7 +333,8 @@ class Excel2Mapa:
                 self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
         else:
             self.iface.messageBar().pushMessage("INEGI", "No se encontró ninguna composición de mapa", Qgis.Warning, 5)
-
+    def cambiarValor(self,valor):
+        print(valor)
 
     def run(self):
         if self.first_start == True:
@@ -339,6 +344,7 @@ class Excel2Mapa:
         self.Copia = "copia_tmp"
         self.load_qgz_project()    
         self.dlg.mQgsFileWidget.fileChanged.connect(self.validar)
+        self.dlg.rojo.valueChanged.connect(self.cambiarValor)
 
         result = self.dlg.exec_()
         if result:

@@ -6,8 +6,13 @@
    <rect>
     <x>0</x>
     <y>0</y>
+<<<<<<< HEAD
     <width>471</width>
     <height>478</height>
+=======
+    <width>479</width>
+    <height>530</height>
+>>>>>>> 47f33193abfe54378fe1cdd5627ca760e542f956
    </rect>
   </property>
   <property name="font">
@@ -27,7 +32,11 @@
   <widget class="QToolBox" name="toolBox">
    <property name="geometry">
     <rect>
+<<<<<<< HEAD
      <x>0</x>
+=======
+     <x>20</x>
+>>>>>>> 47f33193abfe54378fe1cdd5627ca760e542f956
      <y>10</y>
      <width>441</width>
      <height>461</height>
@@ -42,6 +51,7 @@
       <x>0</x>
       <y>0</y>
       <width>441</width>
+<<<<<<< HEAD
       <height>407</height>
      </rect>
     </property>
@@ -194,6 +204,188 @@
      </property>
      <property name="value">
       <number>16</number>
+=======
+      <height>401</height>
+     </rect>
+    </property>
+    <attribute name="label">
+     <string>Datos a utlizar</string>
+    </attribute>
+    <widget class="QDial" name="rojo">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>250</y>
+       <width>41</width>
+       <height>51</height>
+      </rect>
+     </property>
+     <property name="maximum">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QTableWidget" name="tableWidget">
+     <property name="geometry">
+      <rect>
+       <x>120</x>
+       <y>80</y>
+       <width>211</width>
+       <height>151</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">font: 10
+pt &quot;Mongolian Baiti&quot;;</string>
+     </property>
+     <column>
+      <property name="text">
+       <string>Variable</string>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+       </font>
+      </property>
+      <property name="background">
+       <color>
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </property>
+      <property name="foreground">
+       <brush brushstyle="NoBrush">
+        <color alpha="255">
+         <red>0</red>
+         <green>0</green>
+         <blue>0</blue>
+        </color>
+       </brush>
+      </property>
+     </column>
+     <column>
+      <property name="text">
+       <string>Valor</string>
+      </property>
+      <property name="font">
+       <font>
+        <weight>75</weight>
+        <bold>true</bold>
+        <underline>false</underline>
+       </font>
+      </property>
+      <property name="background">
+       <color>
+        <red>255</red>
+        <green>255</green>
+        <blue>255</blue>
+       </color>
+      </property>
+      <property name="foreground">
+       <brush brushstyle="NoBrush">
+        <color alpha="255">
+         <red>0</red>
+         <green>0</green>
+         <blue>0</blue>
+        </color>
+       </brush>
+      </property>
+     </column>
+    </widget>
+    <widget class="QgsFileWidget" name="mQgsFileWidget">
+     <property name="geometry">
+      <rect>
+       <x>50</x>
+       <y>40</y>
+       <width>351</width>
+       <height>27</height>
+      </rect>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_4">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>10</y>
+       <width>371</width>
+       <height>21</height>
+      </rect>
+>>>>>>> 47f33193abfe54378fe1cdd5627ca760e542f956
+     </property>
+     <property name="text">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:9pt; font-weight:600; color:#626262;&quot;&gt;Seleccione el archivo excel que contiene los datos del Mapa&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+    </widget>
+    <widget class="QLCDNumber" name="lcd_rojo">
+     <property name="geometry">
+      <rect>
+       <x>30</x>
+       <y>300</y>
+       <width>81</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Cascadia Mono</family>
+      </font>
+     </property>
+     <property name="cursor">
+      <cursorShape>ArrowCursor</cursorShape>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">color: rgb(255, 0, 0);</string>
+     </property>
+     <property name="smallDecimalPoint">
+      <bool>true</bool>
+     </property>
+     <property name="mode">
+      <enum>QLCDNumber::Dec</enum>
+     </property>
+     <property name="value" stdset="0">
+      <double>255.000000000000000</double>
+     </property>
+     <property name="intValue" stdset="0">
+      <number>255</number>
+     </property>
+    </widget>
+    <widget class="QDialogButtonBox" name="btn_si">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>370</y>
+       <width>161</width>
+       <height>32</height>
+      </rect>
+     </property>
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Yes</set>
+     </property>
+    </widget>
+    <widget class="QLabel" name="label_5">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>350</y>
+       <width>311</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="font">
+      <font>
+       <family>Century Gothic</family>
+       <pointsize>10</pointsize>
+       <weight>75</weight>
+       <italic>true</italic>
+       <bold>true</bold>
+      </font>
+     </property>
+     <property name="text">
+      <string>¿Desea utilizar estos datos para crear el mapa?</string>
      </property>
     </widget>
    </widget>
@@ -203,7 +395,7 @@
       <x>0</x>
       <y>0</y>
       <width>441</width>
-      <height>407</height>
+      <height>401</height>
      </rect>
     </property>
     <attribute name="label">
@@ -214,47 +406,58 @@
  </widget>
  <customwidgets>
   <customwidget>
+<<<<<<< HEAD
+=======
+   <class>QgsDateTimeEdit</class>
+   <extends>QDateTimeEdit</extends>
+   <header>qgsdatetimeedit.h</header>
+  </customwidget>
+  <customwidget>
+>>>>>>> 47f33193abfe54378fe1cdd5627ca760e542f956
    <class>QgsFileWidget</class>
    <extends>QWidget</extends>
    <header>qgsfilewidget.h</header>
   </customwidget>
+<<<<<<< HEAD
   <customwidget>
    <class>QgsMapLayerComboBox</class>
    <extends>QComboBox</extends>
    <header>qgsmaplayercombobox.h</header>
   </customwidget>
+=======
+>>>>>>> 47f33193abfe54378fe1cdd5627ca760e542f956
  </customwidgets>
  <resources/>
  <connections>
   <connection>
-   <sender>button_box</sender>
+   <sender>rojo</sender>
+   <signal>valueChanged(int)</signal>
+   <receiver>lcd_rojo</receiver>
+   <slot>display(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>80</x>
+     <y>345</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>90</x>
+     <y>355</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>btn_si</sender>
    <signal>accepted()</signal>
    <receiver>Excel2MapaDialogBase</receiver>
    <slot>accept()</slot>
    <hints>
     <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
+     <x>230</x>
+     <y>425</y>
     </hint>
     <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-   </hints>
-  </connection>
-  <connection>
-   <sender>button_box</sender>
-   <signal>rejected()</signal>
-   <receiver>Excel2MapaDialogBase</receiver>
-   <slot>reject()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>20</x>
-     <y>20</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>20</x>
-     <y>20</y>
+     <x>239</x>
+     <y>264</y>
     </hint>
    </hints>
   </connection>

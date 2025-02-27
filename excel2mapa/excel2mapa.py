@@ -25,26 +25,20 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication,QVariant
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QPushButton
-from qgis.core import  QgsProject, QgsVectorLayer, QgsLayoutExporter, Qgis,QgsLayoutItemLabel,QgsField
+from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsLayoutItemLabel,QgsField
 
 from qgis.core import (
     QgsProject,
     QgsField,
-    QgsRendererRange,
-    QgsGraduatedSymbolRenderer,
     QgsRendererCategory,
     QgsCategorizedSymbolRenderer,
     QgsSymbol
 )
 from PyQt5.QtGui import QColor
 
-
-# Initialize Qt resources from file resources.py
 from .resources import *
-# Import the code for the dialog
 from .excel2mapa_dialog import Excel2MapaDialog
 import os.path
-from os import system as s
 import shutil
 
 
@@ -63,7 +57,7 @@ class Excel2Mapa:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-        self.original = f"{self.plugin_dir}/Plantilla_3_34.qgz"
+        self.original = f"{self.plugin_dir}/Plantilla_3_34_final_2.qgz"
         self.copia = None
 
         # initialize locale
@@ -274,6 +268,14 @@ class Excel2Mapa:
 
 
         
+        def compositor(self):
+            composerTitle = 'MyComposer' # Name of the composer
+            project = QgsProject.instance()
+            projectLayoutManager = project.layoutManager()
+            layout = projectLayoutManager.layoutByName(composerTitle)
+            return layout
+        
+
 
         def VerPdf():
             os.startfile(export_path_pdf)
@@ -356,6 +358,8 @@ class Excel2Mapa:
         self.dlg.rampa4.clear()
         self.dlg.rampa5.clear()
         self.dlg.rampa6.clear()
+        self.dlg.mQgsFileWidget.clear()
+
 
     def salir(self):
        self.dlg.close()

@@ -85,6 +85,7 @@ class Excel2Mapa:
         self.datosAct = None
         self.categorias = None
         self.colorRampa = ["255,255,255,255","255,255,255,255","255,255,255,255","255,255,255,255","255,255,255,255"]
+        self.rampaActual = None
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
@@ -238,7 +239,6 @@ class Excel2Mapa:
 
     def crearComposicion(self):
         def agregaCampos(**dat):
-            print(dat)
             capa = proyect.mapLayersByName(dat["lay"][0])[0]
             dataPro = capa.dataProvider()
             dataPro.addAttributes([QgsField(*cam) for cam in dat["campos"] if cam[0] not in [field.name() for field in dataPro.fields()]])
@@ -262,9 +262,10 @@ class Excel2Mapa:
             capa = proyect.mapLayersByName(dat["lay"][0])[0]
             unique_values = self.datosAct[newCampos[0]].unique()
             categories = []
-            for value in unique_values:
+            for value, color in zip(unique_values,self.rampaActual):
+                color = ''.join([f'{int(c):02X}' for c in color.split(",")[:3]])
                 symbol = QgsSymbol.defaultSymbol(capa.geometryType())
-                symbol.setColor(QColor('blue'))  # Set color as needed
+                symbol.setColor(QColor(f"#{color}"))  # Set color as needed
                 category = QgsRendererCategory(value, symbol, str(value))
                 categories.append(category)
             renderer = QgsCategorizedSymbolRenderer(newCampos[0], categories)
@@ -326,20 +327,41 @@ class Excel2Mapa:
             if r["nombre"] == self.dlg.comboRampas.currentText():
                 color = r["colores"]
                 break
-        print(color)
+        self.rampaActual = color
         for i in range(len(color)):
-            print(color[i])
             eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba({color[i]});')")
-            
+            eval(f"self.dlg.rampa{i+1}.setText('{i+1}')")
     
     def rampasColor(self):
         import json
         js=open(f"{self.plugin_dir}/styles-INEGI.json","r")
         rampas = json.load(js)["qgis_style"]["colorramps"]
+        js.close()
         self.colorRampa = [{"nombre": r["name"],"colores":list(r["options"].values())[:self.categorias]}  for r in rampas if (len(list((r["options"].keys())))-1)/2 ==self.categorias]
         self.dlg.comboRampas.clear()
         for rampa in self.colorRampa:
             self.dlg.comboRampas.addItem(rampa["nombre"])
+        
+
+    def limpiar(self):
+        self.dlg.tableWidget.clear()   
+        self.dlg.tableWidget.setRowCount(0)
+        self.dlg.tableWidget.setColumnCount(0)  
+        self.dlg.comboRampas.clear()
+        self.dlg.comboRampas.addItem("Seleccione una rampa")
+        self.dlg.comboRampas.setCurrentIndex(0)
+        self.dlg.rampa1.clear()
+        self.dlg.rampa2.clear()
+        self.dlg.rampa3.clear()
+        self.dlg.rampa4.clear()
+        self.dlg.rampa5.clear()
+        self.dlg.rampa6.clear()
+
+    def salir(self):
+       self.dlg.close()
+       self.dlg.destroy()
+
+
 
     def run(self):
         if self.first_start == True:
@@ -351,7 +373,13 @@ class Excel2Mapa:
         self.dlg.mQgsFileWidget.fileChanged.connect(self.validar)
         self.dlg.rojo.valueChanged.connect(self.cambiarValor)
         self.dlg.comboRampas.currentTextChanged.connect(self.seleccRampa)
+        self.dlg.btnMapa.clicked.connect(self.crearComposicion)
+        self.dlg.limpiarDatos.clicked.connect(self.limpiar)
+        self.dlg.salir.clicked.connect(self.salir)
+        self.dlg.setWindowTitle("Generardor Mapas Tematicos")
         result = self.dlg.exec_()
         if result:
-            self.crearComposicion()
-            self.dlg.destroy()
+            print("Entro al if")
+            pass
+
+

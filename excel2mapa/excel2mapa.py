@@ -326,7 +326,7 @@ class Excel2Mapa:
             if r["nombre"] == self.dlg.comboRampas.currentText():
                 color = r["colores"]
                 break
-        print(color)
+        self.rampaActiva = color
         for i in range(len(color)):
             print(color[i])
             eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba({color[i]});')")

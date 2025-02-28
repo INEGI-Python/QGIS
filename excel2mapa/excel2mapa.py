@@ -57,15 +57,12 @@ class Excel2Mapa:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-        self.original = f"{self.plugin_dir}/Plantilla_3_34_final_2.qgz"
+        self.original = f"{self.plugin_dir}/Plantilla_3_34.qgz"
         self.copia = None
 
         # initialize locale
-        locale = QSettings().value('locale/userLocale')[0:2]
-        locale_path = os.path.join(
-            self.plugin_dir,
-            'i18n',
-            'Excel2Mapa_{}.qm'.format(locale))
+        locale = QSettings().value('locale/userLocale')[:2]
+        locale_path = os.path.join(self.plugin_dir, 'i18n', f'Excel2Mapa_{locale}.qm')
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -205,10 +202,9 @@ class Excel2Mapa:
             self.iface.removeToolBarIcon(action)
     
     def load_qgz_project(self):
-        if  os.path.exists(self.Copia):
-            if QgsProject.instance().read(self.Copia):
-                self.iface.messageBar().pushMessage("INEGI","Proyecto cargado satisfactoriamente",Qgis.Info,5)
-                return True
+        if os.path.exists(self.Copia) and QgsProject.instance().read(self.Copia):
+            self.iface.messageBar().pushMessage("INEGI","Proyecto cargado satisfactoriamente",Qgis.Info,5)
+            return True
         self.iface.messageBar().pushMessage("INEGI","Error al cargar el proyecto",Qgis.Critical,5)
         return False
     
@@ -324,11 +320,14 @@ class Excel2Mapa:
         print(valor)
     
     def seleccRampa(self):
-        color=[]
-        for r in self.colorRampa:
-            if r["nombre"] == self.dlg.comboRampas.currentText():
-                color = r["colores"]
-                break
+        color = next(
+            (
+                r["colores"]
+                for r in self.colorRampa
+                if r["nombre"] == self.dlg.comboRampas.currentText()
+            ),
+            [],
+        )
         self.rampaActual = color
         for i in range(len(color)):
             eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba({color[i]});')")
@@ -336,9 +335,8 @@ class Excel2Mapa:
     
     def rampasColor(self):
         import json
-        js=open(f"{self.plugin_dir}/styles-INEGI.json","r")
-        rampas = json.load(js)["qgis_style"]["colorramps"]
-        js.close()
+        with open(f"{self.plugin_dir}/styles-INEGI.json","r") as js:
+            rampas = json.load(js)["qgis_style"]["colorramps"]
         self.colorRampa = [{"nombre": r["name"],"colores":list(r["options"].values())[:self.categorias]}  for r in rampas if (len(list((r["options"].keys())))-1)/2 ==self.categorias]
         self.dlg.comboRampas.clear()
         for rampa in self.colorRampa:
@@ -358,12 +356,12 @@ class Excel2Mapa:
         self.dlg.rampa4.clear()
         self.dlg.rampa5.clear()
         self.dlg.rampa6.clear()
-        self.dlg.mQgsFileWidget.clear()
+        self.dlg.tableWidget.clear()
 
 
     def salir(self):
-       self.dlg.close()
-       self.dlg.destroy()
+        self.dlg.close()
+        self.dlg.destroy()
 
 
 
@@ -373,7 +371,7 @@ class Excel2Mapa:
             self.dlg = Excel2MapaDialog()
         self.dlg.show()
         self.Copia = "copia_tmp"
-        self.load_qgz_project()    
+        self.load_qgz_project()
         self.dlg.mQgsFileWidget.fileChanged.connect(self.validar)
         self.dlg.rojo.valueChanged.connect(self.cambiarValor)
         self.dlg.comboRampas.currentTextChanged.connect(self.seleccRampa)
@@ -381,9 +379,5 @@ class Excel2Mapa:
         self.dlg.limpiarDatos.clicked.connect(self.limpiar)
         self.dlg.salir.clicked.connect(self.salir)
         self.dlg.setWindowTitle("Generardor Mapas Tematicos")
-        result = self.dlg.exec_()
-        if result:
+        if result := self.dlg.exec_():
             print("Entro al if")
-            pass
-
-

@@ -57,7 +57,7 @@ class Excel2Mapa:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-        self.original = f"{self.plugin_dir}/Plantilla_3_34.qgz"
+        self.original = f"{self.plugin_dir}/Plantilla_3_34_final_2.qgz"
         self.copia = None
 
         # initialize locale
@@ -182,7 +182,7 @@ class Excel2Mapa:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/excel2mapa/icon.png'
+        icon_path = './plugins/excel2mapa/icon.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Excel - Mapa'),
@@ -281,7 +281,7 @@ class Excel2Mapa:
         proyect = QgsProject.instance()
         newCampos= list(self.datosAct.keys())
         cantReg = len(self.datosAct.index)
-        nomCapas = ["EstadosMexico_2","Municipios_2024"]
+        nomCapas = ["EstadosMexico","Municipios_2020"]
         cap =  nomCapas if cantReg<=32 else nomCapas[::-1]
         indices = agregaCampos(lay=cap ,campos=[[newCampos[0],QVariant.String],[newCampos[1],QVariant.Int]])
         agregarValores(lay=cap,idxCampos=indices)
@@ -356,7 +356,9 @@ class Excel2Mapa:
         self.dlg.rampa4.clear()
         self.dlg.rampa5.clear()
         self.dlg.rampa6.clear()
-        self.dlg.tableWidget.clear()
+        self.dlg.mQgsFileWidget.clear()
+        self.dlg.comboRampas.addItem("Archivo Excel")
+        self.dlg.mQgsFileWidget.setCurrentIndex(0)
 
 
     def salir(self):

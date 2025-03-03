@@ -5,15 +5,15 @@
 [general]
 name=Excel 2 Mapa
 qgisMinimumVersion=3.0
-description=Genera un mapa tomando datos de un archivo excel
+description=De un excel crea una Mapa
 version=0.1
 author=INEGI
 email=emmanuel.rodriguez@inegi.org.mx
 
-about=Genera un mapa tomando datos de un archivo excel
+about=Herramienta que nos ayuda a crear un mapa para impresion o distribucion en digital utilizando los datos de un archivo excel
 
 tracker=http://bugs
-repository=https://github.com/INEGI-Python/excel2map.git
+repository=https://github.com/INEGI-Python/QGIS.git
 # End of mandatory metadata
 
 # Recommended items:
@@ -25,7 +25,7 @@ hasProcessingProvider=no
 # Tags are comma separated with spaces allowed
 tags=python
 
-homepage=www.inegi.org.mx
+homepage=https://github.com/INEGI-Python/QGIS.git
 category=Plugins
 icon=icon.png
 # experimental flag

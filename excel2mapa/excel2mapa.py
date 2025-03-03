@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication,QVariant
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QPushButton
-from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsLayoutItemLabel,QgsField
+from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsLayoutItemLabel,QgsField,QgsVectorLayer
 
 from qgis.core import (
     QgsProject,
@@ -57,11 +57,11 @@ class Excel2Mapa:
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__)
-        self.original = f"{self.plugin_dir}/Plantilla_3_34_final_2.qgz"
+        self.original = f"{self.plugin_dir}/plantilla/Plantilla_3_34_final_2.qgz"
         self.copia = None
 
         # initialize locale
-        locale = QSettings().value('locale/userLocale')[:2]
+        locale = QSettings().value('locale/userLocale')[0:2]
         locale_path = os.path.join(self.plugin_dir, 'i18n', f'Excel2Mapa_{locale}.qm')
 
         if os.path.exists(locale_path):
@@ -77,6 +77,7 @@ class Excel2Mapa:
         self.categorias = None
         self.colorRampa = ["255,255,255,255","255,255,255,255","255,255,255,255","255,255,255,255","255,255,255,255"]
         self.rampaActual = None
+        self.año = 2020
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
@@ -182,7 +183,7 @@ class Excel2Mapa:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = './plugins/excel2mapa/icon.png'
+        icon_path = ':/plugins/excel2mapa/icon.png'
         self.add_action(
             icon_path,
             text=self.tr(u'Excel - Mapa'),
@@ -244,6 +245,7 @@ class Excel2Mapa:
             capa = proyect.mapLayersByName(dat["lay"][0])[0]
             capa.startEditing()
             for i,vals in self.datosAct.iterrows():
+                capa.setIndexExpression()
                 capa.changeAttributeValue(i,dat["idxCampos"][0],vals[0])
                 capa.changeAttributeValue(i,dat["idxCampos"][1],vals[1])  
             capa.commitChanges()
@@ -281,7 +283,7 @@ class Excel2Mapa:
         proyect = QgsProject.instance()
         newCampos= list(self.datosAct.keys())
         cantReg = len(self.datosAct.index)
-        nomCapas = ["EstadosMexico","Municipios_2020"]
+        nomCapas = ["EstadosMexico",f"Municipios_{self.año}"]
         cap =  nomCapas if cantReg<=32 else nomCapas[::-1]
         indices = agregaCampos(lay=cap ,campos=[[newCampos[0],QVariant.String],[newCampos[1],QVariant.Int]])
         agregarValores(lay=cap,idxCampos=indices)
@@ -315,9 +317,6 @@ class Excel2Mapa:
         else:
             self.iface.messageBar().pushMessage("INEGI", "No se encontró ninguna composición de mapa", Qgis.Warning, 5)
 
-
-    def cambiarValor(self,valor):
-        print(valor)
     
     def seleccRampa(self):
         color = next(
@@ -335,7 +334,7 @@ class Excel2Mapa:
     
     def rampasColor(self):
         import json
-        with open(f"{self.plugin_dir}/styles-INEGI.json","r") as js:
+        with open(f"{self.plugin_dir}/plantilla/styles-INEGI.json","r") as js:
             rampas = json.load(js)["qgis_style"]["colorramps"]
         self.colorRampa = [{"nombre": r["name"],"colores":list(r["options"].values())[:self.categorias]}  for r in rampas if (len(list((r["options"].keys())))-1)/2 ==self.categorias]
         self.dlg.comboRampas.clear()
@@ -356,15 +355,17 @@ class Excel2Mapa:
         self.dlg.rampa4.clear()
         self.dlg.rampa5.clear()
         self.dlg.rampa6.clear()
-        self.dlg.mQgsFileWidget.clear()
-        self.dlg.comboRampas.addItem("Archivo Excel")
-        self.dlg.mQgsFileWidget.setCurrentIndex(0)
+        self.dlg.mQgsFileWidget.setFilePath("")
+        
 
 
-    def salir(self):
-        self.dlg.close()
-        self.dlg.destroy()
-
+    def cargarMunicipios(self,year):
+        proyecto = QgsProject.instance()
+        eli=[l for l in proyecto.mapLayers() if l[:10]=="Municipios"]
+        for l in eli:
+            proyecto.removeMapLayer(l)  
+        proyecto.addMapLayer(QgsVectorLayer(f'{self.plugin_dir}/plantilla/TemplateQgis_3_34.gpkg|layername=Municipios_{year}_finales',f"Municipios_{year}"),True)
+        self.año = year
 
 
     def run(self):
@@ -372,14 +373,15 @@ class Excel2Mapa:
             self.first_start = False
             self.dlg = Excel2MapaDialog()
         self.dlg.show()
-        self.Copia = "copia_tmp"
+        self.Copia = "plantilla/copia_tmp"
         self.load_qgz_project()
+        self.dlg.mQgsFileWidget.setFilter("Excel (*.xls *.xlsx)")
         self.dlg.mQgsFileWidget.fileChanged.connect(self.validar)
-        self.dlg.rojo.valueChanged.connect(self.cambiarValor)
         self.dlg.comboRampas.currentTextChanged.connect(self.seleccRampa)
         self.dlg.btnMapa.clicked.connect(self.crearComposicion)
-        self.dlg.limpiarDatos.clicked.connect(self.limpiar)
-        self.dlg.salir.clicked.connect(self.salir)
+        self.dlg.btnLimpiar.clicked.connect(self.limpiar)
+        self.dlg.selectMuni.currentTextChanged.connect(self.cargarMunicipios)
         self.dlg.setWindowTitle("Generardor Mapas Tematicos")
-        if result := self.dlg.exec_():
-            print("Entro al if")
+       
+       # if result := self.dlg.exec_():
+           # print("Entro al if")

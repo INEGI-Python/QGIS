@@ -1,9 +1,9 @@
 #/***************************************************************************
 # Excel2Mapa
 #
-# Genera un mapa tomando datos de un archivo excel
+# De un excel crea una Mapa
 #							 -------------------
-#		begin				: 2025-02-20
+#		begin				: 2025-03-03
 #		git sha				: $Format:%H$
 #		copyright			: (C) 2025 by INEGI
 #		email				: emmanuel.rodriguez@inegi.org.mx

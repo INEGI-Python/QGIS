@@ -25,11 +25,8 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication,QVariant
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QPushButton
-from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsLayoutItemLabel,QgsField,QgsVectorLayer
-
+from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsLayoutItemLabel,QgsVectorLayer
 from qgis.core import (
-    QgsProject,
-    QgsField,
     QgsRendererCategory,
     QgsCategorizedSymbolRenderer,
     QgsSymbol
@@ -40,7 +37,9 @@ from .resources import *
 from .excel2mapa_dialog import Excel2MapaDialog
 import os.path
 import shutil
-
+import geopandas as geo
+import pandas as pan
+import os
 
 class Excel2Mapa:
     """QGIS Plugin Implementation."""
@@ -56,7 +55,7 @@ class Excel2Mapa:
         # Save reference to the QGIS interface
         self.iface = iface
         # initialize plugin directory
-        self.plugin_dir = os.path.dirname(__file__)
+        self.plugin_dir = os.path.dirname(__file__).replace("\\","/")
         self.original = f"{self.plugin_dir}/plantilla/Plantilla_3_34_final_2.qgz"
         self.copia = None
 
@@ -90,32 +89,49 @@ class Excel2Mapa:
         os.remove(f"{self.plugin_dir}/{valor}.qgz") if os.path.exists(f"{self.plugin_dir}/{valor}.qgz") else None
         self.copia = shutil.copyfile(self.original,f"{self.plugin_dir}/{valor}.qgz").replace("\\","/")
     
+    def seleccRampa(self):
+        color = next(
+            (
+                r["colores"]
+                for r in self.colorRampa
+                if r["nombre"] == self.dlg.comboRampas.currentText()
+            ),
+            [],
+        )
+        self.rampaActual = color
+        for i in range(len(color)):
+            eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba({color[i]});')")
+            eval(f"self.dlg.rampa{i+1}.setText('{i+1}')")
+    
+    def rampasColor(self):
+        import json
+        with open(f"{self.plugin_dir}/plantilla/styles-INEGI.json","r") as js:
+            rampas = json.load(js)["qgis_style"]["colorramps"]
+        self.colorRampa = [{"nombre": r["name"],"colores":list(r["options"].values())[:self.categorias]}  for r in rampas if (len(list((r["options"].keys())))-1)/2 ==self.categorias]
+        self.dlg.comboRampas.clear()
+        for rampa in self.colorRampa:
+            self.dlg.comboRampas.addItem(rampa["nombre"])
+        
+
+    def limpiar(self):
+        self.dlg.tableWidget.clear()   
+        self.dlg.tableWidget.setRowCount(0)
+        self.dlg.tableWidget.setColumnCount(0)  
+        self.dlg.comboRampas.clear()
+        self.dlg.comboRampas.addItem("Seleccione una rampa")
+        self.dlg.comboRampas.setCurrentIndex(0)
+        self.dlg.rampa1.clear()
+        self.dlg.rampa2.clear()
+        self.dlg.rampa3.clear()
+        self.dlg.rampa4.clear()
+        self.dlg.rampa5.clear()
+        self.dlg.rampa6.clear()
+        self.dlg.mQgsFileWidget.setFilePath("")
     # noinspection PyMethodMayBeStatic
     def tr(self, message):
-        """Get the translation for a string using Qt translation API.
-
-        We implement this ourselves since we do not inherit QObject.
-
-        :param message: String for translation.
-        :type message: str, QString
-
-        :returns: Translated version of message.
-        :rtype: QString
-        """
-        # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('Excel2Mapa', message)
 
-    def add_action(
-        self,
-        icon_path,
-        text,
-        callback,
-        enabled_flag=True,
-        add_to_menu=True,
-        add_to_toolbar=True,
-        status_tip=None,
-        whats_this=None,
-        parent=None):
+    def add_action(self,icon_path, text,callback,enabled_flag=True,add_to_menu=True,add_to_toolbar=True, status_tip=None, whats_this=None, parent=None):
         """Add a toolbar icon to the toolbar.
 
         :param icon_path: Path to the icon for this action. Can be a resource
@@ -209,47 +225,41 @@ class Excel2Mapa:
         return False
     
     def validar(self,file):
-        if file.split(".")[-1] in ["xls","xlsx"]:
-            import pandas as pan
-            ex = pan.read_excel(file,index_col=None,header=None,sheet_name="Composicion")
-            self.dlg.tableWidget.setRowCount(len(ex.index))
-            self.dlg.tableWidget.setColumnCount(len(ex.columns))
-            for i in range(len(ex.index)):
-                for j in range(len(ex.columns)):
-                    self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(str(ex.iat[i, j])))
-            self.iface.messageBar().pushMessage("Cargando Excel","Los  datos fueron cargados satisfactoriamente",Qgis.Info,5)
-            for i,v in ex.iterrows():
-                self.variables[v[0]] = v[1]
-            self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
-            self.categorias = len(list(self.datosAct["Clase"].unique()))
-            self.rampasColor()
-        else:
-            self.iface.messageBar().pushMessage("Cargando Excel","El archivo no es tipo Excel",Qgis.Critical,10)
+        ex = pan.read_excel(file,index_col=None,header=None,sheet_name="Composicion")
+        self.dlg.tableWidget.setRowCount(len(ex.index))
+        self.dlg.tableWidget.setColumnCount(len(ex.columns))
+        for i in range(len(ex.index)):
+            for j in range(len(ex.columns)):
+                self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(str(ex.iat[i, j])))
+        self.iface.messageBar().pushMessage("Cargando Excel","Los datos fueron cargados satisfactoriamente",Qgis.Info,5)
+        for i,v in ex.iterrows():
+            self.variables[v[0]] = v[1]
+        self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
+        cap = self.unirDatos("EstadosMexico",['CVEGEO','CVE_ENT','NOMGEO',"NOM_ABR",'geometry'],f"Municipios_{self.año}_finales") if len(self.datosAct.index)<=32 else self.unirDatos(f"Municipios_{self.año}_finales",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
+        self.categorias = len(list(self.datosAct["Clase"].unique()))
+        self.rampasColor()
 
+
+    def unirDatos(self,capa,campos,apagar="EstadosMexico",proyecto=QgsProject.instance()):
+        ruta = f"{self.plugin_dir}/plantilla"
+        for l in [m for m in proyecto.mapLayers() if m[0:10]=="Municipios"]: 
+            proyecto.removeMapLayer(l)
+        if os.path.exists(f"{ruta}/{capa}_composicion.shp"):
+            os.remove(f"{ruta}/{capa}_composicion.shp")
+        
+        datos = geo.read_file(f"{ruta}/TemplateQgis_3_34.gpkg",layer=capa,columns=campos,encoding='utf-8') 
+        datos["CVEGEO"] = datos["CVEGEO"].astype('Int64')
+        datos.set_index('CVEGEO',inplace=True)
+        union = datos.join(self.datosAct)
+        union.sort_values("Clase")
+        union.to_file(f"{ruta}/{capa}_composicion.shp", index=True)
+        proyecto.addMapLayer(QgsVectorLayer(f'{ruta}/{capa}_composicion.shp',capa),True)
+        capApagada = proyecto.mapLayersByName(apagar)[0]
+        proyecto.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False) 
 
     def crearComposicion(self):
-        def agregaCampos(**dat):
-            capa = proyect.mapLayersByName(dat["lay"][0])[0]
-            dataPro = capa.dataProvider()
-            dataPro.addAttributes([QgsField(*cam) for cam in dat["campos"] if cam[0] not in [field.name() for field in dataPro.fields()]])
-            capa.updateFields()    
-            capApagada = proyect.mapLayersByName(dat["lay"][1])[0]
-            proyect.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False)       
-            idx_new =  [dataPro.fieldNameIndex(cam[0]) for cam in dat["campos"]]
-            for i in range(capa.featureCount()):
-                for idx in idx_new:
-                    capa.changeAttributeValue(i, idx, None)
-            return idx_new
-        def agregarValores(**dat):
-            capa = proyect.mapLayersByName(dat["lay"][0])[0]
-            capa.startEditing()
-            for i,vals in self.datosAct.iterrows():
-                capa.changeAttributeValue(i,dat["idxCampos"][0],vals[0])
-                capa.changeAttributeValue(i,dat["idxCampos"][1],vals[1])  
-            capa.commitChanges()
-
-        def categorizar_layer(**dat):
-            capa = proyect.mapLayersByName(dat["lay"][0])[0]
+        def categorizar_layer(lay):
+            capa = proyect.mapLayersByName(lay)[0]
             unique_values = self.datosAct[newCampos[0]].unique()
             categories = []
             for value, color in zip(unique_values,self.rampaActual):
@@ -258,20 +268,9 @@ class Excel2Mapa:
                 symbol.setColor(QColor(f"#{color}"))  # Set color as needed
                 category = QgsRendererCategory(value, symbol, str(value))
                 categories.append(category)
-            renderer = QgsCategorizedSymbolRenderer(newCampos[0], categories)
+            renderer = QgsCategorizedSymbolRenderer(newCampos[0][:10], categories)
             capa.setRenderer(renderer)  
             capa.triggerRepaint()
-
-
-        
-        def compositor(self):
-            composerTitle = 'MyComposer' # Name of the composer
-            project = QgsProject.instance()
-            projectLayoutManager = project.layoutManager()
-            layout = projectLayoutManager.layoutByName(composerTitle)
-            return layout
-        
-
 
         def VerPdf():
             os.startfile(export_path_pdf)
@@ -280,12 +279,9 @@ class Excel2Mapa:
 
         proyect = QgsProject.instance()
         newCampos= list(self.datosAct.keys())
-        cantReg = len(self.datosAct.index)
-        nomCapas = ["EstadosMexico",f"Municipios_{self.año}"]
-        cap =  nomCapas if cantReg<=32 else nomCapas[::-1]
-        indices = agregaCampos(lay=cap ,campos=[[newCampos[0],QVariant.String],[newCampos[1],QVariant.Int]])
-        agregarValores(lay=cap,idxCampos=indices)
-        categorizar_layer(lay=cap)
+        
+
+        categorizar_layer(f"Municipios_{self.año}_finales")
         proxe =proyect.layoutManager()
         if lst := proxe.printLayouts():
             layout = lst[0]
@@ -315,58 +311,9 @@ class Excel2Mapa:
         else:
             self.iface.messageBar().pushMessage("INEGI", "No se encontró ninguna composición de mapa", Qgis.Warning, 5)
 
-    
-    def seleccRampa(self):
-        color = next(
-            (
-                r["colores"]
-                for r in self.colorRampa
-                if r["nombre"] == self.dlg.comboRampas.currentText()
-            ),
-            [],
-        )
-        self.rampaActual = color
-        for i in range(len(color)):
-            eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba({color[i]});')")
-            eval(f"self.dlg.rampa{i+1}.setText('{i+1}')")
-    
-    def rampasColor(self):
-        import json
-        with open(f"{self.plugin_dir}/plantilla/styles-INEGI.json","r") as js:
-            rampas = json.load(js)["qgis_style"]["colorramps"]
-        self.colorRampa = [{"nombre": r["name"],"colores":list(r["options"].values())[:self.categorias]}  for r in rampas if (len(list((r["options"].keys())))-1)/2 ==self.categorias]
-        self.dlg.comboRampas.clear()
-        for rampa in self.colorRampa:
-            self.dlg.comboRampas.addItem(rampa["nombre"])
-        
-
-    def limpiar(self):
-        self.dlg.tableWidget.clear()   
-        self.dlg.tableWidget.setRowCount(0)
-        self.dlg.tableWidget.setColumnCount(0)  
-        self.dlg.comboRampas.clear()
-        self.dlg.comboRampas.addItem("Seleccione una rampa")
-        self.dlg.comboRampas.setCurrentIndex(0)
-        self.dlg.rampa1.clear()
-        self.dlg.rampa2.clear()
-        self.dlg.rampa3.clear()
-        self.dlg.rampa4.clear()
-        self.dlg.rampa5.clear()
-        self.dlg.rampa6.clear()
-        self.dlg.mQgsFileWidget.setFilePath("")
-        
-
 
     def cargarMunicipios(self,year):
-        proyecto = QgsProject.instance()
-        eli=[l for l in proyecto.mapLayers() if l[:10]=="Municipios"]
-        for l in eli:
-            proyecto.removeMapLayer(l)
-        try:
-            proyecto.addMapLayer(QgsVectorLayer(f'{self.plugin_dir}/plantilla/municipios_{year}.shp',f"Municipios_{year}"),True)
-        except Exception as e:
-            proyecto.addMapLayer(QgsVectorLayer(f'{self.plugin_dir}/plantilla/TemplateQgis_3_34.gpkg|layername=Municipios_{year}_finales',f"Municipios_{year}"),True)
-        
+        self.unirDatos(f"Municipios_{year}_finales",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
         self.año = year
 
 

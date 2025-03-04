@@ -1,10 +1,5 @@
-from qgis.core import *
+import geopandas as geo
 
-def compositor(myCompo):
-    proy = QgsProject.instance()
-    proyLayMana = proy.layoutManager()
-    lay = proyLayMana.layoutByName(myCompo)
-    return lay
-    
-compo = compositor("1:12 000 000")
-print(compo)
+datos = geo.read_file("mun.shp",columns=['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
+datos.set_index('CVEGEO',inplace=True)
+datos.to_file("excel2mapa/plantilla/municipios_2024.shp", index=True)

@@ -105,7 +105,6 @@ class Excel2Mapa:
         # noinspection PyTypeChecker,PyArgumentList,PyCallByClass
         return QCoreApplication.translate('Excel2Mapa', message)
 
-
     def add_action(
         self,
         icon_path,
@@ -245,7 +244,6 @@ class Excel2Mapa:
             capa = proyect.mapLayersByName(dat["lay"][0])[0]
             capa.startEditing()
             for i,vals in self.datosAct.iterrows():
-                capa.setIndexExpression()
                 capa.changeAttributeValue(i,dat["idxCampos"][0],vals[0])
                 capa.changeAttributeValue(i,dat["idxCampos"][1],vals[1])  
             capa.commitChanges()
@@ -363,8 +361,12 @@ class Excel2Mapa:
         proyecto = QgsProject.instance()
         eli=[l for l in proyecto.mapLayers() if l[:10]=="Municipios"]
         for l in eli:
-            proyecto.removeMapLayer(l)  
-        proyecto.addMapLayer(QgsVectorLayer(f'{self.plugin_dir}/plantilla/TemplateQgis_3_34.gpkg|layername=Municipios_{year}_finales',f"Municipios_{year}"),True)
+            proyecto.removeMapLayer(l)
+        try:
+            proyecto.addMapLayer(QgsVectorLayer(f'{self.plugin_dir}/plantilla/municipios_{year}.shp',f"Municipios_{year}"),True)
+        except Exception as e:
+            proyecto.addMapLayer(QgsVectorLayer(f'{self.plugin_dir}/plantilla/TemplateQgis_3_34.gpkg|layername=Municipios_{year}_finales',f"Municipios_{year}"),True)
+        
         self.año = year
 
 

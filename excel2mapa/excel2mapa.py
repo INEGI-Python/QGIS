@@ -242,8 +242,7 @@ class Excel2Mapa:
 
     def unirDatos(self,capa,campos,apagar="EstadosMexico",proyecto=QgsProject.instance()):
         ruta = f"{self.plugin_dir}/plantilla"
-        for l in [m for m in proyecto.mapLayers() if m[0:10]=="Municipios"]: 
-            proyecto.removeMapLayer(l)
+        [proyecto.removeMapLayer(m) for m in proyecto.mapLayers() if m[0:10]=="Municipios" or m[0:7]=="Estados"]            
         if os.path.exists(f"{ruta}/{capa}_composicion.shp"):
             os.remove(f"{ruta}/{capa}_composicion.shp")
         
@@ -252,10 +251,14 @@ class Excel2Mapa:
         datos.set_index('CVEGEO',inplace=True)
         union = datos.join(self.datosAct)
         union.sort_values("Clase")
-        union.to_file(f"{ruta}/{capa}_composicion.shp", index=True)
+        union.to_file(f"{ruta}/{capa}_composicion.shp", index=True)   
         proyecto.addMapLayer(QgsVectorLayer(f'{ruta}/{capa}_composicion.shp',capa),True)
-        capApagada = proyecto.mapLayersByName(apagar)[0]
-        proyecto.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False) 
+        try:
+            capApagada = proyecto.mapLayersByName(apagar)[0]
+            proyecto.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False) 
+        except:
+            pass
+
 
     def crearComposicion(self):
         def categorizar_layer(lay):
@@ -279,9 +282,7 @@ class Excel2Mapa:
 
         proyect = QgsProject.instance()
         newCampos= list(self.datosAct.keys())
-        
-
-        categorizar_layer(f"Municipios_{self.año}_finales")
+        categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}_finales")
         proxe =proyect.layoutManager()
         if lst := proxe.printLayouts():
             layout = lst[0]

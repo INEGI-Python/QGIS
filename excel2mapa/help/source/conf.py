@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# Excel2Mapa documentation build configuration file, created by
+# excel2mapa documentation build configuration file, created by
 # sphinx-quickstart on Sun Feb 12 17:11:03 2012.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -40,8 +40,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'Excel2Mapa'
-copyright = u'2025, INEGI'
+project = u'excel2mapa'
+copyright = u'2013, INEGI'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -178,7 +178,7 @@ htmlhelp_basename = 'TemplateClassdoc'
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'Excel2Mapa.tex', u'Excel2Mapa Documentation',
+  ('index', 'excel2mapa.tex', u'excel2mapa Documentation',
    u'INEGI', 'manual'),
 ]
 
@@ -211,6 +211,6 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'TemplateClass', u'Excel2Mapa Documentation',
+    ('index', 'TemplateClass', u'excel2mapa Documentation',
      [u'INEGI'], 1)
 ]

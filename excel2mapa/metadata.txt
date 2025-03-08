@@ -3,14 +3,14 @@
 # This file should be included when you package your plugin.# Mandatory items:
 
 [general]
-name=Excel 2 Mapa
+name=INEGI Composicion
 qgisMinimumVersion=3.0
-description=De un excel crea una Mapa
+description=Genera una composicion de un mapa obteniendo los datos de un arcchivo excel
 version=0.1
 author=INEGI
 email=emmanuel.rodriguez@inegi.org.mx
 
-about=Herramienta que nos ayuda a crear un mapa para impresion o distribucion en digital utilizando los datos de un archivo excel
+about=Genera una composicion de un mapa obteniendo los datos de un arcchivo excel
 
 tracker=http://bugs
 repository=https://github.com/INEGI-Python/QGIS.git

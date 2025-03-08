@@ -40,7 +40,7 @@ from qgis.core import (
 from PyQt5.QtGui import QColor
 
 from .resources import *
-from .excel2mapa_dialog import Excel2MapaDialog
+from .excel2mapa_dialog import excel2mapaDialog
 import os.path
 import shutil
 import geopandas as geo
@@ -48,7 +48,7 @@ import pandas as pan
 import os
 
 #QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(),"plugin_dir",os.path.dirname(__file__).replace("\\","/"))
-class Excel2Mapa:
+class excel2mapa:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
@@ -68,7 +68,7 @@ class Excel2Mapa:
 
         # initialize locale
         locale = QSettings().value('locale/userLocale')[0:2]
-        locale_path = os.path.join(self.plugin_dir, 'i18n', f'Excel2Mapa_{locale}.qm')
+        locale_path = os.path.join(self.plugin_dir, 'i18n', f'excel2mapa_{locale}.qm')
 
         if os.path.exists(locale_path):
             self.translator = QTranslator()
@@ -96,6 +96,27 @@ class Excel2Mapa:
         os.remove(f"{self.plugin_dir}/{valor}.qgz") if os.path.exists(f"{self.plugin_dir}/{valor}.qgz") else None
         self.copia = shutil.copyfile(self.original,f"{self.plugin_dir}/{valor}.qgz").replace("\\","/")
     
+    def categorizar_layer(self,lay,newCampos,proyect=QgsProject.instance()):
+        capa = proyect.mapLayersByName(lay)[0]
+        unique_values = self.datosAct[newCampos[0]].unique()
+        grosor = self.dlg.grosorLinea.value()
+        categories = []
+        for value, color in zip(unique_values,self.rampaActual):
+            color = ''.join([f'{int(c):02X}' for c in color.split(",")[:3]])
+            symbol = QgsSymbol.defaultSymbol(capa.geometryType())
+            symbol.setColor(QColor(f"#{color}"))  # Set color as needed
+            symbol.symbolLayer(0).setStrokeColor(QColor("black"))
+            symbol.symbolLayer(0).setStrokeWidth(grosor)
+
+            category = QgsRendererCategory(value, symbol, str(value))
+            categories.append(category)
+        renderer = QgsCategorizedSymbolRenderer(newCampos[0][:10], categories)
+        capa.setRenderer(renderer)  
+        capa.triggerRepaint()
+    
+    
+    
+    
     def seleccRampa(self):
         color = next(
             (
@@ -106,9 +127,13 @@ class Excel2Mapa:
             [],
         )
         self.rampaActual = color
+        self.limpiaRampas(6)
         for i in range(len(color)):
             eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba({color[i]});')")
             eval(f"self.dlg.rampa{i+1}.setText('{i+1}')")
+        newCampos= list(self.datosAct.keys())
+        self.categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}_finales",newCampos)
+
     
     def rampasColor(self):
         import json
@@ -118,8 +143,14 @@ class Excel2Mapa:
         self.dlg.comboRampas.clear()
         for rampa in self.colorRampa:
             self.dlg.comboRampas.addItem(rampa["nombre"])
-        
+        newCampos= list(self.datosAct.keys())
+        self.categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}_finales",newCampos)
 
+    def limpiaRampas(self,cant):
+        for i in range(cant):
+            eval(f"self.dlg.rampa{i+1}.clear()")
+            eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba(255,255,255,255);')")    
+    
     def limpiar(self):
         self.dlg.tableWidget.clear()   
         self.dlg.tableWidget.setRowCount(0)
@@ -127,14 +158,9 @@ class Excel2Mapa:
         self.dlg.comboRampas.clear()
         self.dlg.comboRampas.addItem("Seleccione una rampa")
         self.dlg.comboRampas.setCurrentIndex(0)
-        self.dlg.rampa1.clear()
-        self.dlg.rampa2.clear()
-        self.dlg.rampa3.clear()
-        self.dlg.rampa4.clear()
-        self.dlg.rampa5.clear()
-        self.dlg.rampa6.clear()
+        self.limpiaRampas(6)
         self.dlg.mQgsFileWidget.setFilePath("")
-    # noinspection PyMethodMayBeStatic
+ 
     def tr(self, message):
         return QCoreApplication.translate('Excel2Mapa', message)
 
@@ -205,7 +231,8 @@ class Excel2Mapa:
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
-        icon_path = ':/plugins/excel2mapa/icon.png'
+        #icon_path = ':/plugins/excel2mapa/icon.png'
+        icon_path = f"{self.plugin_dir}/icon.png"
         self.add_action(
             icon_path,
             text=self.tr(u'Excel - Mapa'),
@@ -244,7 +271,6 @@ class Excel2Mapa:
         for i,v in ex.iterrows():
             self.variables[v[0]] = v[1]
         self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
-        print(dir(self.dlg.selectMuni))
         if len(self.datosAct.index)==32:
             self.dlg.selectMuni.setDisabled(True)
         else:
@@ -284,30 +310,11 @@ class Excel2Mapa:
 
 
     def crearComposicion(self):
-        def categorizar_layer(lay):
-            capa = proyect.mapLayersByName(lay)[0]
-            unique_values = self.datosAct[newCampos[0]].unique()
-            categories = []
-            for value, color in zip(unique_values,self.rampaActual):
-                color = ''.join([f'{int(c):02X}' for c in color.split(",")[:3]])
-                symbol = QgsSymbol.defaultSymbol(capa.geometryType())
-                symbol.setColor(QColor(f"#{color}"))  # Set color as needed
-                print(dir(symbol))
-
-                category = QgsRendererCategory(value, symbol, str(value))
-                categories.append(category)
-            renderer = QgsCategorizedSymbolRenderer(newCampos[0][:10], categories)
-            capa.setRenderer(renderer)  
-            capa.triggerRepaint()
-
         def VerPdf():
             os.startfile(export_path_pdf)
         def VerImg():
             os.startfile(export_path_img)
-
         proyect = QgsProject.instance()
-        newCampos= list(self.datosAct.keys())
-        categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}_finales")
         proxe =proyect.layoutManager()
         if lst := proxe.printLayouts():
             layout = lst[0]
@@ -343,7 +350,7 @@ class Excel2Mapa:
     def run(self):
         if self.first_start == True:
             self.first_start = False
-            self.dlg = Excel2MapaDialog()
+            self.dlg = excel2mapaDialog()
         self.dlg.show()
         self.Copia = "plantilla/copia_tmp"
         self.load_qgz_project()

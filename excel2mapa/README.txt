@@ -1,10 +1,10 @@
 Plugin Builder Results
 
-Your plugin Excel2Mapa was created in:
-    D:/misDocs/2025/INEGI/QGIS\excel2mapa
+Your plugin excel2mapa was created in:
+    E:/Documents/CODIGO_FUENTE/INEGI/Generalizacion2025\excel2mapa
 
 Your QGIS plugin directory is located at:
-    C:/Users/emmanuel.rodriguez/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins
+    C:/Users/iscem/AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins
 
 What's Next:
 
@@ -21,7 +21,7 @@ What's Next:
 
   * Create your own custom icon, replacing the default icon.png
 
-  * Modify your user interface by opening Excel2Mapa_dialog_base.ui in Qt Designer
+  * Modify your user interface by opening excel2mapa_dialog_base.ui in Qt Designer
 
   * You can use the Makefile to compile your Ui and resource files when
     you make changes. This requires GNU make (gmake)

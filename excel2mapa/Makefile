@@ -1,9 +1,9 @@
 #/***************************************************************************
-# Excel2Mapa
+# excel2mapa
 #
-# De un excel crea una Mapa
+# Genera una composicion de un mapa obteniendo los datos de un arcchivo excel
 #							 -------------------
-#		begin				: 2025-03-03
+#		begin				: 2025-03-08
 #		git sha				: $Format:%H$
 #		copyright			: (C) 2025 by INEGI
 #		email				: emmanuel.rodriguez@inegi.org.mx
@@ -65,7 +65,7 @@ PEP8EXCLUDE=pydev,resources.py,conf.py,third_party,ui
 #	* Windows:
 #	  AppData\Roaming\QGIS\QGIS3\profiles\default\python\plugins'
 
-QGISDIR=C:\Users\emmanuel.rodriguez\AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins
+QGISDIR=C:\Users\iscem\AppData/Roaming/QGIS/QGIS3/profiles/default/python/plugins
 
 #################################################
 # Normally you would not need to edit below here

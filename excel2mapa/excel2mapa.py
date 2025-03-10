@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication,QVariant
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QPushButton
-from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsLayoutItemLabel,QgsVectorLayer,QgsExpressionContextUtils
+from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsLayoutItemLabel,QgsVectorLayer,QgsExpressionContextUtils, QgsUnitTypes, QgsLayoutPoint, QgsLayoutSize, QgsLayoutItemLegend
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QAction
 from qgis.PyQt.QtGui import QIcon
@@ -84,6 +84,7 @@ class excel2mapa:
         self.colorRampa = ["255,255,255,255","255,255,255,255","255,255,255,255","255,255,255,255","255,255,255,255"]
         self.rampaActual = None
         self.año = 2020
+        self.rutaGuardar=None
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
@@ -99,14 +100,13 @@ class excel2mapa:
     def categorizar_layer(self,lay,newCampos,proyect=QgsProject.instance()):
         capa = proyect.mapLayersByName(lay)[0]
         unique_values = self.datosAct[newCampos[0]].unique()
-        grosor = self.dlg.grosorLinea.value()
         categories = []
         for value, color in zip(unique_values,self.rampaActual):
             color = ''.join([f'{int(c):02X}' for c in color.split(",")[:3]])
             symbol = QgsSymbol.defaultSymbol(capa.geometryType())
             symbol.setColor(QColor(f"#{color}"))  # Set color as needed
-            symbol.symbolLayer(0).setStrokeColor(QColor("black"))
-            symbol.symbolLayer(0).setStrokeWidth(grosor)
+            symbol.symbolLayer(0).setStrokeColor(QColor("#FFFFFFFF"))
+            symbol.symbolLayer(0).setStrokeWidth(0.001)
 
             category = QgsRendererCategory(value, symbol, str(value))
             categories.append(category)
@@ -271,6 +271,16 @@ class excel2mapa:
         for i,v in ex.iterrows():
             self.variables[v[0]] = v[1]
         self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
+
+        aux = pan.read_excel(file,index_col=None,header=0,sheet_name="Datos")
+
+        self.dlg.tableWidget_2.setRowCount(len(aux.index))
+        self.dlg.tableWidget_2.setColumnCount(len(aux.columns))
+        self.dlg.tableWidget_2.setHorizontalHeaderLabels(aux.columns)
+        for i in range(len(aux.index)):
+            for j in range(len(aux.columns)):
+                self.dlg.tableWidget_2.setItem(i, j, QTableWidgetItem(str(aux.iat[i, j])))
+
         if len(self.datosAct.index)==32:
             self.dlg.selectMuni.setDisabled(True)
         else:
@@ -319,14 +329,30 @@ class excel2mapa:
         if lst := proxe.printLayouts():
             layout = lst[0]
             for k in self.variables.keys():
-                QgsExpressionContextUtils.setLayoutVariable(layout,k,self.variables[k])
+                QgsExpressionContextUtils.setLayoutVariable(layout, k, self.variables[k])
+
+
+            # Add legend to the layout
+            legend = QgsLayoutItemLegend(layout)
+            legend.LegendTitle("DATOS")
+            legend.LegendColumnCount()
+            
+
+            print(dir(legend))
+            
+            legend.setLinkedMap(proxe.layoutByName(layout.name()).referenceMap())
+            layout.addLayoutItem(legend)
+            legend.attemptMove(QgsLayoutPoint(10, 10, QgsUnitTypes.LayoutMillimeters))
+            legend.attemptResize(QgsLayoutSize(50, 50, QgsUnitTypes.LayoutMillimeters))
+
+
             exporter = QgsLayoutExporter(layout)
-            export_path_pdf = os.path.join(self.plugin_dir, "map_composition.pdf")
-            export_path_img = os.path.join(self.plugin_dir, "map_composition.png")
+            export_path_pdf = os.path.join(self.rutaGuardar, "map_composition.pdf")
+            export_path_img = os.path.join(self.rutaGuardar, "map_composition.png")
             result = exporter.exportToPdf(export_path_pdf, QgsLayoutExporter.PdfExportSettings())
             result2 = exporter.exportToImage (export_path_img, QgsLayoutExporter.ImageExportSettings())
             if result == QgsLayoutExporter.Success:
-                widget = self.iface.messageBar().createMessage("MAPA EXPORTADO SATISFACTORIAMENTE", "Utilice los botones de la derecha para ver el resultado.")
+                widget = self.iface.messageBar().createMessage("COMPOSICION GUARDADA  SATISFACTORIAMENTE", "Utilice los botones de la derecha para ver el resultado.")
                 boton_pdf = QPushButton(widget)
                 boton_pdf.setText("Ver PDF")
                 boton_pdf.pressed.connect(VerPdf)
@@ -346,6 +372,14 @@ class excel2mapa:
         self.unirDatos(f"Municipios_{year}_finales",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
         self.año = year
 
+    def activaBtnMapa(self,valor):
+        if os.path.exists(valor):
+            self.dlg.btnMapa.setEnabled(True)
+            self.rutaGuardar = valor
+        else:
+            self.dlg.btnMapa.setDisabled(True)
+            self.iface.messageBar().pushMessage("INEGI", "La ruta no es valida. Verifique la carpeta seleccionada exista.", Qgis.Critical, 5)
+
 
     def run(self):
         if self.first_start == True:
@@ -360,6 +394,7 @@ class excel2mapa:
         self.dlg.btnMapa.clicked.connect(self.crearComposicion)
         self.dlg.btnLimpiar.clicked.connect(self.limpiar)
         self.dlg.selectMuni.currentTextChanged.connect(self.cargarMunicipios)
+        self.dlg.carpetaGuardar.fileChanged.connect(self.activaBtnMapa)
         self.dlg.setWindowTitle("Generardor Mapas Tematicos")
        
        # if result := self.dlg.exec_():

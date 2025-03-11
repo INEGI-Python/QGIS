@@ -46,7 +46,10 @@ import shutil
 import geopandas as geo
 import pandas as pan
 import os
+from datetime import datetime as dt
 
+
+hoy = dt.today()  
 #QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(),"plugin_dir",os.path.dirname(__file__).replace("\\","/"))
 class excel2mapa:
     """QGIS Plugin Implementation."""
@@ -331,21 +334,23 @@ class excel2mapa:
             for k in self.variables.keys():
                 QgsExpressionContextUtils.setLayoutVariable(layout, k, self.variables[k])
 
-
+        
             # Add legend to the layout
             legend = QgsLayoutItemLegend(layout)
-            legend.setTitle("AQUI VA EL TITULO")
+            confi = legend.legendSettings()
+            print(dir(confi))
             legend.refresh()
-            
+            legend.drawRefreshingOverlay()
+            layout.refresh()
             #legend.setLinkedMap(proxe.layoutByName(layout.name()).referenceMap())
             #layout.addLayoutItem(legend)
             #legend.attemptMove(QgsLayoutPoint(10, 10, QgsUnitTypes.LayoutMillimeters))
             #legend.attemptResize(QgsLayoutSize(50, 50, QgsUnitTypes.LayoutMillimeters))
 
-
+            ahorita=hoy.now().__str__()[:-7].replace(":",".").replace(" ","..")
             exporter = QgsLayoutExporter(layout)
-            export_path_pdf = os.path.join(self.rutaGuardar, "map_composition.pdf")
-            export_path_img = os.path.join(self.rutaGuardar, "map_composition.png")
+            export_path_pdf = os.path.join(self.rutaGuardar, f"{self.variables['TituloMapa']}_composition_{ahorita}.pdf")
+            export_path_img = os.path.join(self.rutaGuardar, f"{self.variables['TituloMapa']}_composition_{ahorita}.png")
             result = exporter.exportToPdf(export_path_pdf, QgsLayoutExporter.PdfExportSettings())
             result2 = exporter.exportToImage (export_path_img, QgsLayoutExporter.ImageExportSettings())
             if result == QgsLayoutExporter.Success:

@@ -105,16 +105,16 @@ class excel2mapa:
             color = ''.join([f'{int(c):02X}' for c in color.split(",")[:3]])
             symbol = QgsSymbol.defaultSymbol(capa.geometryType())
             symbol.setColor(QColor(f"#{color}"))  # Set color as needed
-            symbol.symbolLayer(0).setStrokeColor(QColor("#FFFFFFFF"))
-            symbol.symbolLayer(0).setStrokeWidth(0.001)
+            symbol.symbolLayer(0).setStrokeColor(QColor("transparent"))
+            symbol.symbolLayer(0).setStrokeWidth(0.0001)
+            symbol.symbolLayer(0).setStrokeStyle(0)
+            
 
             category = QgsRendererCategory(value, symbol, str(value))
             categories.append(category)
         renderer = QgsCategorizedSymbolRenderer(newCampos[0][:10], categories)
         capa.setRenderer(renderer)  
         capa.triggerRepaint()
-    
-    
     
     
     def seleccRampa(self):
@@ -334,16 +334,13 @@ class excel2mapa:
 
             # Add legend to the layout
             legend = QgsLayoutItemLegend(layout)
-            legend.LegendTitle("DATOS")
-            legend.LegendColumnCount()
+            legend.setTitle("AQUI VA EL TITULO")
+            legend.refresh()
             
-
-            print(dir(legend))
-            
-            legend.setLinkedMap(proxe.layoutByName(layout.name()).referenceMap())
-            layout.addLayoutItem(legend)
-            legend.attemptMove(QgsLayoutPoint(10, 10, QgsUnitTypes.LayoutMillimeters))
-            legend.attemptResize(QgsLayoutSize(50, 50, QgsUnitTypes.LayoutMillimeters))
+            #legend.setLinkedMap(proxe.layoutByName(layout.name()).referenceMap())
+            #layout.addLayoutItem(legend)
+            #legend.attemptMove(QgsLayoutPoint(10, 10, QgsUnitTypes.LayoutMillimeters))
+            #legend.attemptResize(QgsLayoutSize(50, 50, QgsUnitTypes.LayoutMillimeters))
 
 
             exporter = QgsLayoutExporter(layout)

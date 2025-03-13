@@ -333,15 +333,14 @@ class excel2mapa:
             layout = lst[0]
             for k in self.variables.keys():
                 QgsExpressionContextUtils.setLayoutVariable(layout, k, self.variables[k])
-
-        
-            # Add legend to the layout
-            legend = QgsLayoutItemLegend(layout)
-            confi = legend.legendSettings()
-            print(dir(confi))
-            legend.refresh()
-            legend.drawRefreshingOverlay()
-            layout.refresh()
+            legend=None
+            for i in layout.items():
+                if isinstance(i, QgsLayoutItemLegend)
+                    legend=i
+                    break
+            mod = legend.model()
+            mod.index(0,0).data()
+            
             #legend.setLinkedMap(proxe.layoutByName(layout.name()).referenceMap())
             #layout.addLayoutItem(legend)
             #legend.attemptMove(QgsLayoutPoint(10, 10, QgsUnitTypes.LayoutMillimeters))

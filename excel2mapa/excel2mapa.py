@@ -334,10 +334,10 @@ class excel2mapa:
                 legend = i
                 break
         legend.setAutoUpdateModel(False)
-        legend.setTitle(self.variables["TituloSimbologia"])
-        estilo= QgsLegendStyle()
-        estilo.setFont(QFont("Arial",5,1,True))
-        legend.setStyle(QgsLegendStyle.Title,estilo)
+        #legend.setTitle(self.variables.get("TituloSimbologia") if self.variables.get("TituloSimbologia") else "Leyenda")
+        #estilo= QgsLegendStyle()
+        #estilo.setFont(QFont("Arial",5,2,False))
+        #legend.setStyle(QgsLegendStyle.Title,estilo)
         root=legend.model().rootGroup()
         layerNuevo = [l for l in proyect.mapLayers().values() if l.name()==self.composicion["capa"]][0]
         root.removeAllChildren()

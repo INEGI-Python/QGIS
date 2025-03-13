@@ -25,11 +25,9 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication,QVariant
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QPushButton
-from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsLayoutItemLabel,QgsVectorLayer,QgsExpressionContextUtils, QgsUnitTypes, QgsLayoutPoint, QgsLayoutSize, QgsLayoutItemLegend
+from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsVectorLayer,QgsExpressionContextUtils, QgsLayoutItemLegend,QgsLegendStyle
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QAction
-from qgis.PyQt.QtGui import QIcon
-from qgis.core import QgsProject
 
 
 from qgis.core import (
@@ -37,7 +35,7 @@ from qgis.core import (
     QgsCategorizedSymbolRenderer,
     QgsSymbol
 )
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor,QFont
 
 from .resources import *
 from .excel2mapa_dialog import excel2mapaDialog
@@ -88,6 +86,7 @@ class excel2mapa:
         self.rampaActual = None
         self.año = 2020
         self.rutaGuardar=None
+        self.composicion = {"nombre":"Escala 1:21 000 000"}
         # Check if plugin was started the first time in current QGIS session
         # Must be set in initGui() to survive plugin reloads
         self.first_start = None
@@ -108,9 +107,9 @@ class excel2mapa:
             color = ''.join([f'{int(c):02X}' for c in color.split(",")[:3]])
             symbol = QgsSymbol.defaultSymbol(capa.geometryType())
             symbol.setColor(QColor(f"#{color}"))  # Set color as needed
-            symbol.symbolLayer(0).setStrokeColor(QColor("transparent"))
-            symbol.symbolLayer(0).setStrokeWidth(0.0001)
-            symbol.symbolLayer(0).setStrokeStyle(0)
+           # symbol.symbolLayer(0).setStrokeColor(QColor(f"#{color}"))
+            symbol.symbolLayer(0).setStrokeWidth(0.01)
+            #symbol.symbolLayer(0).setStrokeStyle(0)
             
 
             category = QgsRendererCategory(value, symbol, str(value))
@@ -135,7 +134,7 @@ class excel2mapa:
             eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba({color[i]});')")
             eval(f"self.dlg.rampa{i+1}.setText('{i+1}')")
         newCampos= list(self.datosAct.keys())
-        self.categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}_finales",newCampos)
+        self.categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}",newCampos)
 
     
     def rampasColor(self):
@@ -147,7 +146,7 @@ class excel2mapa:
         for rampa in self.colorRampa:
             self.dlg.comboRampas.addItem(rampa["nombre"])
         newCampos= list(self.datosAct.keys())
-        self.categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}_finales",newCampos)
+        self.categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}",newCampos)
 
     def limpiaRampas(self,cant):
         for i in range(cant):
@@ -288,7 +287,7 @@ class excel2mapa:
             self.dlg.selectMuni.setDisabled(True)
         else:
             self.dlg.selectMuni.setEnabled(True)
-        cap = self.unirDatos("EstadosMexico",['CVEGEO','CVE_ENT','NOMGEO',"NOM_ABR",'geometry'],f"Municipios_{self.año}_finales") if len(self.datosAct.index)<=32 else self.unirDatos(f"Municipios_{self.año}_finales",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
+        self.composicion["capa"] = self.unirDatos("EstadosMexico",['CVEGEO','CVE_ENT','NOMGEO',"NOM_ABR",'geometry'],f"Municipios_{self.año}") if len(self.datosAct.index)<=32 else self.unirDatos(f"Municipios_{self.año}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
         self.categorias = len(list(self.datosAct["Clase"].unique()))
         self.rampasColor()
 
@@ -300,7 +299,7 @@ class excel2mapa:
         if os.path.exists(f"{ruta}/{capa}_composicion.shp"):
             os.remove(f"{ruta}/{capa}_composicion.shp")
         
-        datos = geo.read_file(f"{ruta}/TemplateQgis_3_34.gpkg",layer=capa,columns=campos,encoding='utf-8') 
+        datos = geo.read_file(f"{ruta}/TemplateQgis_3_34.gpkg",layer=capa  if capa=="EstadosMexico" else f"{capa}_finales" ,columns=campos,encoding='utf-8') 
         datos["CVEGEO"] = datos["CVEGEO"].astype('Int64')
         datos.set_index('CVEGEO',inplace=True)
         union = datos.join(self.datosAct)
@@ -312,15 +311,12 @@ class excel2mapa:
             self.dlg.selectMuni.enabled=False
         else:
             self.dlg.selectMuni.enabled=True
-            
-       #proyecto.layerTreeRoot().findLayer(proyecto.mapLayersByName(capa)[0].id()).posit
-
         try:
             capApagada = proyecto.mapLayersByName(apagar)[0]
             proyecto.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False) 
-        except:
-            pass
-
+        except Exception as e:
+            print(e)
+        return capa
 
     def crearComposicion(self):
         def VerPdf():
@@ -329,49 +325,51 @@ class excel2mapa:
             os.startfile(export_path_img)
         proyect = QgsProject.instance()
         proxe =proyect.layoutManager()
-        if lst := proxe.printLayouts():
-            layout = lst[0]
-            for k in self.variables.keys():
-                QgsExpressionContextUtils.setLayoutVariable(layout, k, self.variables[k])
-
+        layout = proxe.layoutByName(self.composicion["nombre"])
+        legend=None
+        for k in self.variables.keys():
+            QgsExpressionContextUtils.setLayoutVariable(layout, k, self.variables[k])
+        for i in layout.items():
+            if isinstance(i,QgsLayoutItemLegend):
+                legend = i
+                break
+        legend.setAutoUpdateModel(False)
+        legend.setTitle(self.variables["TituloSimbologia"])
+        estilo= QgsLegendStyle()
+        estilo.setFont(QFont("Arial",5,1,True))
+        legend.setStyle(QgsLegendStyle.Title,estilo)
+        root=legend.model().rootGroup()
+        layerNuevo = [l for l in proyect.mapLayers().values() if l.name()==self.composicion["capa"]][0]
+        root.removeAllChildren()
+        root.addLayer(layerNuevo)
+        legend.refresh()
+        layout.refresh()
+        layout.update()
         
-            # Add legend to the layout
-            legend = QgsLayoutItemLegend(layout)
-            confi = legend.legendSettings()
-            print(dir(confi))
-            legend.refresh()
-            legend.drawRefreshingOverlay()
-            layout.refresh()
-            #legend.setLinkedMap(proxe.layoutByName(layout.name()).referenceMap())
-            #layout.addLayoutItem(legend)
-            #legend.attemptMove(QgsLayoutPoint(10, 10, QgsUnitTypes.LayoutMillimeters))
-            #legend.attemptResize(QgsLayoutSize(50, 50, QgsUnitTypes.LayoutMillimeters))
-
-            ahorita=hoy.now().__str__()[:-7].replace(":",".").replace(" ","..")
-            exporter = QgsLayoutExporter(layout)
-            export_path_pdf = os.path.join(self.rutaGuardar, f"{self.variables['TituloMapa']}_composition_{ahorita}.pdf")
-            export_path_img = os.path.join(self.rutaGuardar, f"{self.variables['TituloMapa']}_composition_{ahorita}.png")
-            result = exporter.exportToPdf(export_path_pdf, QgsLayoutExporter.PdfExportSettings())
-            result2 = exporter.exportToImage (export_path_img, QgsLayoutExporter.ImageExportSettings())
-            if result == QgsLayoutExporter.Success:
-                widget = self.iface.messageBar().createMessage("COMPOSICION GUARDADA  SATISFACTORIAMENTE", "Utilice los botones de la derecha para ver el resultado.")
-                boton_pdf = QPushButton(widget)
-                boton_pdf.setText("Ver PDF")
-                boton_pdf.pressed.connect(VerPdf)
-                widget.layout().addWidget(boton_pdf)
-                boton_img = QPushButton(widget)
-                boton_img.setText("Ver IMAGEN")
-                boton_img.pressed.connect(VerImg)
-                widget.layout().addWidget(boton_img)
-                self.iface.messageBar().pushWidget(widget, Qgis.Info)
-            else:
-                self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
+        ahorita=hoy.now().__str__()[:-7].replace(":",".").replace(" ","..")
+        exporter = QgsLayoutExporter(layout)
+        export_path_pdf = os.path.join(self.rutaGuardar, f"{self.variables['TituloMapa']}_composition_{ahorita}.pdf")
+        export_path_img = os.path.join(self.rutaGuardar, f"{self.variables['TituloMapa']}_composition_{ahorita}.png")
+        settings=QgsLayoutExporter.PdfExportSettings()
+        result = exporter.exportToPdf(export_path_pdf,settings)
+        result2 = exporter.exportToImage (export_path_img, QgsLayoutExporter.ImageExportSettings())
+        if result == QgsLayoutExporter.Success:
+            widget = self.iface.messageBar().createMessage("COMPOSICION GUARDADA  SATISFACTORIAMENTE", "Utilice los botones de la derecha para ver el resultado.")
+            boton_pdf = QPushButton(widget)
+            boton_pdf.setText("Ver PDF")
+            boton_pdf.pressed.connect(VerPdf)
+            widget.layout().addWidget(boton_pdf)
+            boton_img = QPushButton(widget)
+            boton_img.setText("Ver IMAGEN")
+            boton_img.pressed.connect(VerImg)
+            widget.layout().addWidget(boton_img)
+            self.iface.messageBar().pushWidget(widget, Qgis.Info)
         else:
-            self.iface.messageBar().pushMessage("INEGI", "No se encontró ninguna composición de mapa", Qgis.Warning, 5)
-
+            self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
+  
 
     def cargarMunicipios(self,year):
-        self.unirDatos(f"Municipios_{year}_finales",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
+        self.unirDatos(f"Municipios_{year}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
         self.año = year
 
     def activaBtnMapa(self,valor):

@@ -343,7 +343,7 @@ class excel2mapa:
                 break
         legend.setAutoUpdateModel(False)
         root=legend.model().rootGroup()
-        layerNuevo = [l for l in proyect.mapLayers().values() if l.name()==self.composicion["capa"]][0]
+        layerNuevo = [l for l in proyect.mapLayers().values() if l.name()==self.composicion["capa"]]
         root.removeAllChildren()
         root.addLayer(layerNuevo)
         legend.refresh()

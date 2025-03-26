@@ -40,4 +40,4 @@ Si desea contribuir al desarrollo de `excel2mapa`, por favor siga estos pasos:
 `excel2mapa` está licenciado bajo la Licencia MIT. Consulte el archivo LICENSE para más detalles.
 
 ## Contacto
-Para preguntas o soporte, por favor contacte a [correo@example.com](mailto:correo@example.com).
+Para preguntas o soporte, por favor contacte a [emmanuel.rodriguez@inegi.org.mx](mailto:emmanuel.rodriguez@inegi.org.mx).

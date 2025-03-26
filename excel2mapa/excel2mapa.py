@@ -107,9 +107,13 @@ class excel2mapa:
             color = ''.join([f'{int(c):02X}' for c in color.split(",")[:3]])
             symbol = QgsSymbol.defaultSymbol(capa.geometryType())
             symbol.setColor(QColor(f"#{color}"))  # Set color as needed
-           # symbol.symbolLayer(0).setStrokeColor(QColor(f"#{color}"))
-            symbol.symbolLayer(0).setStrokeWidth(0.01)
-            #symbol.symbolLayer(0).setStrokeStyle(0)
+            if lay=="EstadosMexico":
+                symbol.symbolLayer(0).setStrokeColor(QColor(f"#{color}"))
+                symbol.symbolLayer(0).setStrokeWidth(0.01)
+            else:
+                symbol.symbolLayer(0).setStrokeColor(QColor("#505255"))
+                symbol.symbolLayer(0).setStrokeWidth(0.1)
+                #symbol.symbolLayer(0).setStrokeStyle(0)
             
 
             category = QgsRendererCategory(value, symbol, str(value))
@@ -162,6 +166,8 @@ class excel2mapa:
         self.dlg.comboRampas.setCurrentIndex(0)
         self.limpiaRampas(6)
         self.dlg.mQgsFileWidget.setFilePath("")
+        self.dlg.carpetaGuardar.setFilePath("")
+        self.dlg.msgGuardado.setHidden(True)
  
     def tr(self, message):
         return QCoreApplication.translate('Excel2Mapa', message)
@@ -306,6 +312,8 @@ class excel2mapa:
         self.composicion["capa"] = self.unirDatos("EstadosMexico",['CVEGEO','CVE_ENT','NOMGEO',"NOM_ABR",'geometry'],f"Municipios_{self.año}") if len(self.datosAct.index)<=32 else self.unirDatos(f"Municipios_{self.año}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
         self.categorias = len(list(self.datosAct["Clase"].unique()))
         self.rampasColor()
+        self.dlg.carpetaGuardar.setFilePath("")
+        self.dlg.msgGuardado.setHidden(True)
 
 
     def unirDatos(self,capa,campos,apagar="EstadosMexico",proyecto=QgsProject.instance()):
@@ -350,12 +358,8 @@ class excel2mapa:
                 legend = i
                 break
         legend.setAutoUpdateModel(False)
-        #legend.setTitle(self.variables.get("TituloSimbologia") if self.variables.get("TituloSimbologia") else "Leyenda")
-        #estilo= QgsLegendStyle()
-        #estilo.setFont(QFont("Arial",5,2,False))
-        #legend.setStyle(QgsLegendStyle.Title,estilo)
         root=legend.model().rootGroup()
-        layerNuevo = [l for l in proyect.mapLayers().values() if l.name()==self.composicion["capa"]][0]
+        layerNuevo = [l for l in proyect.mapLayers().values() if l.name()==self.composicion["capa"]]
         root.removeAllChildren()
         root.addLayer(layerNuevo)
         legend.refresh()
@@ -380,6 +384,7 @@ class excel2mapa:
             boton_img.pressed.connect(VerImg)
             widget.layout().addWidget(boton_img)
             self.iface.messageBar().pushWidget(widget, Qgis.Info)
+            self.dlg.msgGuardado.setHidden(False)
         else:
             self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
   
@@ -394,8 +399,7 @@ class excel2mapa:
             self.rutaGuardar = valor
         else:
             self.dlg.btnMapa.setDisabled(True)
-            self.iface.messageBar().pushMessage("INEGI", "La ruta no es valida. Verifique la carpeta seleccionada exista.", Qgis.Critical, 5)
-
+           
 
     def run(self):
         if self.first_start == True:

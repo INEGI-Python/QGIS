@@ -168,6 +168,11 @@ class excel2mapa:
         self.dlg.mQgsFileWidget.setFilePath("")
         self.dlg.carpetaGuardar.setFilePath("")
         self.dlg.msgGuardado.setHidden(True)
+        self.dlg.selectMuni.setDisabled(True)
+        QgsProject.instance().removeAllMapLayers()
+        self.Copia="plantilla/copia_tmp"
+        self.load_qgz_project()
+        return False
  
     def tr(self, message):
         return QCoreApplication.translate('Excel2Mapa', message)
@@ -271,31 +276,30 @@ class excel2mapa:
             return
         if not file.endswith(".xls") and not file.endswith(".xlsx"):
             self.iface.messageBar().pushMessage("INEGI","El archivo debe ser un Excel",Qgis.Critical,5)
-            return
+            return self.limpiar()
         try:
             ex = pan.read_excel(file,index_col=None,header=None,sheet_name="Composicion")
         except Exception as e:
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene una hoja llamada Composicion",Qgis.Critical,5)
-            return
+            return self.limpiar()
         if ex.empty:
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene datos",Qgis.Critical,5)
-            return
+            return self.limpiar()
         self.dlg.tableWidget.setRowCount(len(ex.index))
         self.dlg.tableWidget.setColumnCount(len(ex.columns))
         for i in range(len(ex.index)):
             for j in range(len(ex.columns)):
                 self.dlg.tableWidget.setItem(i, j, QTableWidgetItem(str(ex.iat[i, j])))
-        self.iface.messageBar().pushMessage("Cargando Excel","Los datos fueron cargados satisfactoriamente",Qgis.Info,5)
         for i,v in ex.iterrows():
             self.variables[v[0]] = v[1]
         try:
             self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
         except Exception as e:
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene una hoja llamada Datos",Qgis.Critical,5)
-            return
+            return self.limpiar()
         if self.datosAct.empty:
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene datos",Qgis.Critical,5)
-            return
+            return self.limpiar()
         
         aux = pan.read_excel(file,index_col=None,header=0,sheet_name="Datos")
         self.dlg.tableWidget_2.setRowCount(len(aux.index))
@@ -314,13 +318,14 @@ class excel2mapa:
         self.rampasColor()
         self.dlg.carpetaGuardar.setFilePath("")
         self.dlg.msgGuardado.setHidden(True)
+        self.iface.messageBar().pushMessage("Cargando Excel","Los datos fueron cargados satisfactoriamente",Qgis.Info,5)
 
 
     def unirDatos(self,capa,campos,apagar="EstadosMexico",proyecto=QgsProject.instance()):
         ruta = f"{self.plugin_dir}/plantilla"
         ls = proyecto.mapLayers()
         [proyecto.removeMapLayer(ls[l]) for l in ls.keys()  if ls[l].name()[0:10]=="Municipios" or ls[l].name()=="EstadosMexico"]            
-        if os.path.exists(f"{ruta}/{capa}_composicion.shp"):
+        if os.path.exists(f"{ruta}/{capa}_composicion.shp"):            
             os.remove(f"{ruta}/{capa}_composicion.shp")
         
         datos = geo.read_file(f"{ruta}/TemplateQgis_3_34.gpkg",layer=capa  if capa=="EstadosMexico" else f"{capa}_finales" ,columns=campos,encoding='utf-8') 
@@ -359,7 +364,7 @@ class excel2mapa:
                 break
         legend.setAutoUpdateModel(False)
         root=legend.model().rootGroup()
-        layerNuevo = [l for l in proyect.mapLayers().values() if l.name()==self.composicion["capa"]]
+        layerNuevo = [l for l in proyect.mapLayers().values() if l.name()==self.composicion["capa"]][0]
         root.removeAllChildren()
         root.addLayer(layerNuevo)
         legend.refresh()
@@ -402,32 +407,30 @@ class excel2mapa:
            
 
     def run(self):
+        def cargar(ban):
+            self.dlg.show()
+            self.dlg.msgGuardado.setHidden(True)
+            self.limpiar()
+            if ban:
+                self.dlg.mQgsFileWidget.setFilter("Excel (*.xls *.xlsx)")
+                self.dlg.mQgsFileWidget.fileChanged.connect(self.validar)
+                self.dlg.comboRampas.currentTextChanged.connect(self.seleccRampa)
+                self.dlg.btnMapa.clicked.connect(self.crearComposicion)
+                self.dlg.btnLimpiar.clicked.connect(self.limpiar)
+                self.dlg.selectMuni.currentTextChanged.connect(self.cargarMunicipios)
+                self.dlg.carpetaGuardar.fileChanged.connect(self.activaBtnMapa)
+                self.dlg.setWindowTitle("Generardor Mapas Tematicos")
         if self.first_start == True:
             self.first_start = False
             self.dlg = excel2mapaDialog()
-            
-            self.dlg.show()
-            self.Copia = "plantilla/copia_tmp"
-            self.load_qgz_project()
-            self.dlg.mQgsFileWidget.setFilter("Excel (*.xls *.xlsx)")
-            self.dlg.mQgsFileWidget.fileChanged.connect(self.validar)
-            self.dlg.comboRampas.currentTextChanged.connect(self.seleccRampa)
-            self.dlg.btnMapa.clicked.connect(self.crearComposicion)
-            self.dlg.btnLimpiar.clicked.connect(self.limpiar)
-            self.dlg.selectMuni.currentTextChanged.connect(self.cargarMunicipios)
-            self.dlg.carpetaGuardar.fileChanged.connect(self.activaBtnMapa)
-            self.dlg.setWindowTitle("Generardor Mapas Tematicos")
+            cargar(True)
         else:
-            widget = self.iface.messageBar().createMessage("", "Utilice los botones de la derecha para ver el resultado.")
-            boton_pdf = QPushButton(widget)
-            boton_pdf.setText("Ver PDF")
-            boton_pdf.pressed.connect(VerPdf)
-            widget.layout().addWidget(boton_pdf)
-            boton_img = QPushButton(widget)
-            boton_img.setText("Ver IMAGEN")
-            boton_img.pressed.connect(VerImg)
-            widget.layout().addWidget(boton_img)
-            self.iface.messageBar().pushWidget(widget, Qgis.Info)
-            self.iface.messageBar().pushMessage("INEGI", "La ruta no es valida. Verifique la carpeta seleccionada exista.", Qgis.Critical, 5)
-       # if result := self.dlg.exec_():
-           # print("Entro al if")
+            act = self.dlg
+            if act.isVisible():
+                act.activateWindow() 
+                act.setFocus()
+            else:
+                cargar(False)
+        result = self.dlg.exec_()
+        if result==0:
+            print("Formulario Cerrado")

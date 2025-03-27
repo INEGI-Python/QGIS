@@ -45,7 +45,7 @@ import geopandas as geo
 import pandas as pan
 import os
 from datetime import datetime as dt
-
+import ctypes
 
 hoy = dt.today()  
 #QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(),"plugin_dir",os.path.dirname(__file__).replace("\\","/"))
@@ -53,14 +53,7 @@ class excel2mapa:
     """QGIS Plugin Implementation."""
 
     def __init__(self, iface):
-        """Constructor.
-
-        :param iface: An interface instance that will be passed to this class
-            which provides the hook by which you can manipulate the QGIS
-            application at run time.
-        :type iface: QgsInterface
-        """
-        # Save reference to the QGIS interface
+          # Save reference to the QGIS interface
         self.iface = iface
         # initialize plugin directory
         self.plugin_dir = os.path.dirname(__file__).replace("\\","/")
@@ -82,13 +75,11 @@ class excel2mapa:
         self.variables = {}
         self.datosAct = None
         self.categorias = None
-        self.colorRampa = ["255,255,255,255","255,255,255,255","255,255,255,255","255,255,255,255","255,255,255,255"]
+        self.colorRampa = []
         self.rampaActual = None
         self.año = 2020
         self.rutaGuardar=None
         self.composicion = {"nombre":"Escala 1:21 000 000"}
-        # Check if plugin was started the first time in current QGIS session
-        # Must be set in initGui() to survive plugin reloads
         self.first_start = None
 
     @property
@@ -98,6 +89,9 @@ class excel2mapa:
     def Copia(self,valor):
         os.remove(f"{self.plugin_dir}/{valor}.qgz") if os.path.exists(f"{self.plugin_dir}/{valor}.qgz") else None
         self.copia = shutil.copyfile(self.original,f"{self.plugin_dir}/{valor}.qgz").replace("\\","/")
+    
+    def tr(self, message):
+        return QCoreApplication.translate('Excel2Mapa', message)
     
     def categorizar_layer(self,lay,newCampos,proyect=QgsProject.instance()):
         capa = proyect.mapLayersByName(lay)[0]
@@ -169,13 +163,14 @@ class excel2mapa:
         self.dlg.carpetaGuardar.setFilePath("")
         self.dlg.msgGuardado.setHidden(True)
         self.dlg.selectMuni.setDisabled(True)
-        QgsProject.instance().removeAllMapLayers()
+        proy= QgsProject.instance()
+        proy.removeAllMapLayers()
+        proy.clear()
+        os.system("rm -f plantilla/copia_tmp.qgz")
         self.Copia="plantilla/copia_tmp"
         self.load_qgz_project()
         return False
  
-    def tr(self, message):
-        return QCoreApplication.translate('Excel2Mapa', message)
 
     def add_action(self,icon_path, text,callback,enabled_flag=True,add_to_menu=True,add_to_toolbar=True, status_tip=None, whats_this=None, parent=None):
         """Add a toolbar icon to the toolbar.
@@ -320,20 +315,17 @@ class excel2mapa:
         self.dlg.msgGuardado.setHidden(True)
         self.iface.messageBar().pushMessage("Cargando Excel","Los datos fueron cargados satisfactoriamente",Qgis.Info,5)
 
-
     def unirDatos(self,capa,campos,apagar="EstadosMexico",proyecto=QgsProject.instance()):
         ruta = f"{self.plugin_dir}/plantilla"
         ls = proyecto.mapLayers()
         [proyecto.removeMapLayer(ls[l]) for l in ls.keys()  if ls[l].name()[0:10]=="Municipios" or ls[l].name()=="EstadosMexico"]            
-        if os.path.exists(f"{ruta}/{capa}_composicion.shp"):            
-            os.remove(f"{ruta}/{capa}_composicion.shp")
-        
+        os.system(f"rm -f {ruta}/{capa}_composicion.*")   
         datos = geo.read_file(f"{ruta}/TemplateQgis_3_34.gpkg",layer=capa  if capa=="EstadosMexico" else f"{capa}_finales" ,columns=campos,encoding='utf-8') 
         datos["CVEGEO"] = datos["CVEGEO"].astype('Int64')
         datos.set_index('CVEGEO',inplace=True)
         union = datos.join(self.datosAct)
         union.sort_values("Clase")
-        union.to_file(f"{ruta}/{capa}_composicion.shp", index=True)   
+        union.to_file(f"{ruta}/{capa}_composicion.shp", mode="a")   
         proyecto.addMapLayer(QgsVectorLayer(f'{ruta}/{capa}_composicion.shp',capa),False)
         proyecto.layerTreeRoot().insertLayer(4,proyecto.mapLayersByName(capa)[0])
         if capa=="EstadosMexico":
@@ -431,6 +423,8 @@ class excel2mapa:
                 act.setFocus()
             else:
                 cargar(False)
+                act.activateWindow() 
+                act.setFocus()
         result = self.dlg.exec_()
         if result==0:
             print("Formulario Cerrado")

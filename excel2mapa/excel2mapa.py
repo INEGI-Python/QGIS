@@ -107,9 +107,6 @@ class excel2mapa:
             else:
                 symbol.symbolLayer(0).setStrokeColor(QColor("#505255"))
                 symbol.symbolLayer(0).setStrokeWidth(0.1)
-                #symbol.symbolLayer(0).setStrokeStyle(0)
-            
-
             category = QgsRendererCategory(value, symbol, str(value))
             categories.append(category)
         renderer = QgsCategorizedSymbolRenderer(newCampos[0][:10], categories)
@@ -155,6 +152,9 @@ class excel2mapa:
         self.dlg.tableWidget.clear()   
         self.dlg.tableWidget.setRowCount(0)
         self.dlg.tableWidget.setColumnCount(0)  
+        self.dlg.tableWidget_2.clear()   
+        self.dlg.tableWidget_2.setRowCount(0)
+        self.dlg.tableWidget_2.setColumnCount(0)  
         self.dlg.comboRampas.clear()
         self.dlg.comboRampas.addItem("Seleccione una rampa")
         self.dlg.comboRampas.setCurrentIndex(0)
@@ -261,25 +261,31 @@ class excel2mapa:
     
     def load_qgz_project(self):
         if os.path.exists(self.Copia) and QgsProject.instance().read(self.Copia):
-            self.iface.messageBar().pushMessage("INEGI","Proyecto cargado satisfactoriamente",Qgis.Info,5)
+            self.dlg.activateWindow() 
+            self.dlg.setFocus()
+            self.iface.messageBar().pushMessage("INEGI","Proyecto cargado satisfactoriamente",Qgis.Info,1)
             return True
         self.iface.messageBar().pushMessage("INEGI","Error al cargar el proyecto",Qgis.Critical,5)
         return False
     
     def validar(self,file):
+        limpio=True
         if not file:
             return
         if not file.endswith(".xls") and not file.endswith(".xlsx"):
             self.iface.messageBar().pushMessage("INEGI","El archivo debe ser un Excel",Qgis.Critical,5)
-            return self.limpiar()
+            limpio = self.limpiar()
+            return 
         try:
             ex = pan.read_excel(file,index_col=None,header=None,sheet_name="Composicion")
         except Exception as e:
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene una hoja llamada Composicion",Qgis.Critical,5)
-            return self.limpiar()
+            limpio = self.limpiar()
+            return 
         if ex.empty:
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene datos",Qgis.Critical,5)
-            return self.limpiar()
+            limpio = self.limpiar()
+            return
         self.dlg.tableWidget.setRowCount(len(ex.index))
         self.dlg.tableWidget.setColumnCount(len(ex.columns))
         for i in range(len(ex.index)):
@@ -291,29 +297,39 @@ class excel2mapa:
             self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
         except Exception as e:
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene una hoja llamada Datos",Qgis.Critical,5)
-            return self.limpiar()
+            limpio= self.limpiar()
+            return 
         if self.datosAct.empty:
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene datos",Qgis.Critical,5)
-            return self.limpiar()
+            limpio=self.limpiar()
+            return
         
-        aux = pan.read_excel(file,index_col=None,header=0,sheet_name="Datos")
-        self.dlg.tableWidget_2.setRowCount(len(aux.index))
-        self.dlg.tableWidget_2.setColumnCount(len(aux.columns))
-        self.dlg.tableWidget_2.setHorizontalHeaderLabels(aux.columns)
-        for i in range(len(aux.index)):
-            for j in range(len(aux.columns)):
-                self.dlg.tableWidget_2.setItem(i, j, QTableWidgetItem(str(aux.iat[i, j])))
+        if limpio:
+            aux = pan.read_excel(file,index_col=None,header=0,sheet_name="Datos")
+            self.dlg.tableWidget_2.setRowCount(len(aux.index))
+            self.dlg.tableWidget_2.setColumnCount(len(aux.columns))
+            self.dlg.tableWidget_2.setHorizontalHeaderLabels(aux.columns)
+            for i in range(len(aux.index)):
+                for j in range(len(aux.columns)):
+                    self.dlg.tableWidget_2.setItem(i, j, QTableWidgetItem(str(aux.iat[i, j])))
 
-        if len(self.datosAct.index)==32:
-            self.dlg.selectMuni.setDisabled(True)
-        else:
-            self.dlg.selectMuni.setEnabled(True)
-        self.composicion["capa"] = self.unirDatos("EstadosMexico",['CVEGEO','CVE_ENT','NOMGEO',"NOM_ABR",'geometry'],f"Municipios_{self.año}") if len(self.datosAct.index)<=32 else self.unirDatos(f"Municipios_{self.año}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
-        self.categorias = len(list(self.datosAct["Clase"].unique()))
-        self.rampasColor()
-        self.dlg.carpetaGuardar.setFilePath("")
-        self.dlg.msgGuardado.setHidden(True)
-        self.iface.messageBar().pushMessage("Cargando Excel","Los datos fueron cargados satisfactoriamente",Qgis.Info,5)
+            if len(self.datosAct.index)==32:
+                self.dlg.selectMuni.setDisabled(True)
+            else:
+                self.dlg.selectMuni.setEnabled(True)
+            self.composicion["capa"] = self.unirDatos("EstadosMexico",['CVEGEO','CVE_ENT','NOMGEO',"NOM_ABR",'geometry'],f"Municipios_{self.año}") if len(self.datosAct.index)<=32 else self.unirDatos(f"Municipios_{self.año}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
+            keys = list(self.datosAct.keys())
+            print(keys)
+            if len(list(self.datosAct[keys[1]].unique())) == len(list(self.datosAct[keys[0]].unique())):
+                self.categorias = len(list(self.datosAct[keys[1]].unique()))
+            else:
+                self.iface.messageBar().pushMessage("INEGI","La cantidad de Clases unicas difiere de la cantidad de Etiquetas unicas",Qgis.Critical,10)
+                self.limpiar()
+                return 
+            self.rampasColor()
+            self.dlg.carpetaGuardar.setFilePath("")
+            self.dlg.msgGuardado.setHidden(True)
+            self.iface.messageBar().pushMessage("Cargando Excel","Los datos fueron cargados satisfactoriamente",Qgis.Info,2)
 
     def unirDatos(self,capa,campos,apagar="EstadosMexico",proyecto=QgsProject.instance()):
         ruta = f"{self.plugin_dir}/plantilla"
@@ -324,8 +340,10 @@ class excel2mapa:
         datos["CVEGEO"] = datos["CVEGEO"].astype('Int64')
         datos.set_index('CVEGEO',inplace=True)
         union = datos.join(self.datosAct)
-        union.sort_values("Clase")
-        union.to_file(f"{ruta}/{capa}_composicion.shp", mode="a")   
+        union["Clase"]=union["Clase"].astype("Int64")
+        union.set_index("Clase")
+        union.sort_index(inplace=True)
+        union.to_file(f"{ruta}/{capa}_composicion.shp", mode="w")   
         proyecto.addMapLayer(QgsVectorLayer(f'{ruta}/{capa}_composicion.shp',capa),False)
         proyecto.layerTreeRoot().insertLayer(4,proyecto.mapLayersByName(capa)[0])
         if capa=="EstadosMexico":
@@ -380,7 +398,7 @@ class excel2mapa:
             boton_img.setText("Ver IMAGEN")
             boton_img.pressed.connect(VerImg)
             widget.layout().addWidget(boton_img)
-            self.iface.messageBar().pushWidget(widget, Qgis.Info)
+            self.iface.messageBar().pushWidget(widget, Qgis.Info,30)
             self.dlg.msgGuardado.setHidden(False)
         else:
             self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
@@ -389,6 +407,7 @@ class excel2mapa:
     def cargarMunicipios(self,year):
         self.unirDatos(f"Municipios_{year}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
         self.año = year
+        self.seleccRampa()
 
     def activaBtnMapa(self,valor):
         if os.path.exists(valor):

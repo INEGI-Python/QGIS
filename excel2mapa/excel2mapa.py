@@ -45,7 +45,6 @@ import geopandas as geo
 import pandas as pan
 import os
 from datetime import datetime as dt
-import ctypes
 
 hoy = dt.today()  
 #QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(),"plugin_dir",os.path.dirname(__file__).replace("\\","/"))
@@ -128,8 +127,11 @@ class excel2mapa:
         for i in range(len(color)):
             eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba({color[i]});')")
             eval(f"self.dlg.rampa{i+1}.setText('{i+1}')")
-        newCampos= list(self.datosAct.keys())
-        self.categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}",newCampos)
+        
+        if self.first_start  is not None:
+            print("first_start","\t\t",self.first_start)
+            newCampos= list(self.datosAct.keys())
+            self.categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}",newCampos)
 
     
     def rampasColor(self):
@@ -166,6 +168,9 @@ class excel2mapa:
         proy= QgsProject.instance()
         proy.removeAllMapLayers()
         proy.clear()
+        os.chdir(self.plugin_dir.replace("\\","/"))
+        print(os.getcwd())
+        os.system("rm -f plantilla/*_composicion.*")
         os.system("rm -f plantilla/copia_tmp.qgz")
         self.Copia="plantilla/copia_tmp"
         self.load_qgz_project()
@@ -247,8 +252,9 @@ class excel2mapa:
             callback=self.run,
             parent=self.iface.mainWindow())
 
-        # will be set False in run()
+        print("initGUI-antes ",self.first_start)
         self.first_start = True
+        print("initGUI-antes ",self.first_start)
 
 
     def unload(self):
@@ -335,7 +341,6 @@ class excel2mapa:
         ruta = f"{self.plugin_dir}/plantilla"
         ls = proyecto.mapLayers()
         [proyecto.removeMapLayer(ls[l]) for l in ls.keys()  if ls[l].name()[0:10]=="Municipios" or ls[l].name()=="EstadosMexico"]            
-        os.system(f"rm -f {ruta}/{capa}_composicion.*")   
         datos = geo.read_file(f"{ruta}/TemplateQgis_3_34.gpkg",layer=capa  if capa=="EstadosMexico" else f"{capa}_finales" ,columns=campos,encoding='utf-8') 
         datos["CVEGEO"] = datos["CVEGEO"].astype('Int64')
         datos.set_index('CVEGEO',inplace=True)
@@ -343,7 +348,9 @@ class excel2mapa:
         union["Clase"]=union["Clase"].astype("Int64")
         union.set_index("Clase")
         union.sort_index(inplace=True)
-        union.to_file(f"{ruta}/{capa}_composicion.shp", mode="w")   
+        if os.path.exists(f"{ruta}/{capa}_composicion.shp"):
+            os.system(f"rm -f  {ruta}/*_composicion.*")
+        union.to_file(f"{ruta}/{capa}_composicion.shp")   
         proyecto.addMapLayer(QgsVectorLayer(f'{ruta}/{capa}_composicion.shp',capa),False)
         proyecto.layerTreeRoot().insertLayer(4,proyecto.mapLayersByName(capa)[0])
         if capa=="EstadosMexico":
@@ -374,7 +381,10 @@ class excel2mapa:
                 break
         legend.setAutoUpdateModel(False)
         root=legend.model().rootGroup()
-        layerNuevo = [l for l in proyect.mapLayers().values() if l.name()==self.composicion["capa"]][0]
+        capas = proyect.mapLayers().values()
+        print(capas)
+        print(self.composicion)
+        layerNuevo = [l for l in capas if l.name()==self.composicion["capa"]][0]
         root.removeAllChildren()
         root.addLayer(layerNuevo)
         legend.refresh()
@@ -407,6 +417,7 @@ class excel2mapa:
     def cargarMunicipios(self,year):
         self.unirDatos(f"Municipios_{year}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
         self.año = year
+        self.composicion["capa"]=f"Municipios_{year}"
         self.seleccRampa()
 
     def activaBtnMapa(self,valor):
@@ -442,8 +453,13 @@ class excel2mapa:
                 act.setFocus()
             else:
                 cargar(False)
+                self.first_start == False
                 act.activateWindow() 
                 act.setFocus()
         result = self.dlg.exec_()
         if result==0:
+            self.first_start = None
+            self.datosAct = None
             print("Formulario Cerrado")
+        else:
+            self.first_start = False

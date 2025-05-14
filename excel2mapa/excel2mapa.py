@@ -428,6 +428,16 @@ class excel2mapa:
             self.dlg.btnMapa.setDisabled(True)
            
 
+    def activaTablaComposicion(self):
+        if self.dlg.tabla_on_off.isChecked:
+            self.original= f"{self.plugin_dir}/plantilla/Plantilla_3_34_tabla.qgz"
+            self.tabla_on_off.setStyle("text-decoration: line-through;")
+        else:
+            self.original= f"{self.plugin_dir}/plantilla/Plantilla_3_34.qgz"
+            self.tabla_on_off.setStyle("text-decoration: None;")
+
+    
+
     def run(self):
         def cargar(ban):
             self.dlg.show()
@@ -441,6 +451,7 @@ class excel2mapa:
                 self.dlg.btnLimpiar.clicked.connect(self.limpiar)
                 self.dlg.selectMuni.currentTextChanged.connect(self.cargarMunicipios)
                 self.dlg.carpetaGuardar.fileChanged.connect(self.activaBtnMapa)
+                self.dlg.tabla_on_off.clicked.connect(self.activaTablaComposicion)
                 self.dlg.setWindowTitle("Generardor Mapas Tematicos")
         if self.first_start == True:
             self.first_start = False

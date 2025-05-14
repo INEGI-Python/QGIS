@@ -754,45 +754,51 @@ border-bottom-color: rgb(0, 0, 0);
     <string>La composicion del mapa se guardo correctamente en la carpeta seleccionada</string>
    </property>
   </widget>
-  <widget class="QCheckBox" name="conTabla">
-   <property name="enabled">
-    <bool>true</bool>
-   </property>
+  <widget class="QCommandLinkButton" name="tabla_on_off">
    <property name="geometry">
     <rect>
-     <x>320</x>
-     <y>16</y>
-     <width>81</width>
-     <height>20</height>
+     <x>310</x>
+     <y>10</y>
+     <width>101</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="font">
     <font>
-     <family>Century Gothic</family>
-     <pointsize>9</pointsize>
-     <weight>9</weight>
+     <family>Segoe UI</family>
+     <pointsize>8</pointsize>
+     <weight>50</weight>
      <italic>false</italic>
      <bold>false</bold>
      <underline>false</underline>
-     <strikeout>false</strikeout>
-     <stylestrategy>PreferDefault</stylestrategy>
-     <kerning>false</kerning>
+     <strikeout>true</strikeout>
     </font>
    </property>
    <property name="cursor">
     <cursorShape>PointingHandCursor</cursorShape>
    </property>
+   <property name="toolTip">
+    <string extracomment="La Composicion es generada con su tabla de datos"/>
+   </property>
    <property name="styleSheet">
-    <string notr="true">font: 75 9pt &quot;Century Gothic&quot;;
-
-
-</string>
+    <string notr="true"/>
    </property>
    <property name="text">
-    <string notr="true">con TABLA</string>
+    <string>TABLA</string>
    </property>
-   <property name="tristate">
-    <bool>false</bool>
+   <property name="icon">
+    <iconset>
+     <normaloff>img/off.png</normaloff>
+     <normalon>img/on.png</normalon>img/off.png</iconset>
+   </property>
+   <property name="iconSize">
+    <size>
+     <width>40</width>
+     <height>40</height>
+    </size>
+   </property>
+   <property name="checkable">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>

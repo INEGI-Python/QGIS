@@ -92,6 +92,7 @@ class excel2mapa:
     def tr(self, message):
         return QCoreApplication.translate('Excel2Mapa', message)
     
+    _+-ñ-0
     def categorizar_layer(self,lay,newCampos,proyect=QgsProject.instance()):
         capa = proyect.mapLayersByName(lay)[0]
         unique_values = self.datosAct[newCampos[0]].unique()
@@ -428,14 +429,32 @@ class excel2mapa:
             self.dlg.btnMapa.setDisabled(True)
            
 
-    def activaTablaComposicion(self):
-        if self.dlg.tabla_on_off.isChecked:
-            self.original= f"{self.plugin_dir}/plantilla/Plantilla_3_34_tabla.qgz"
-            self.tabla_on_off.setStyle("text-decoration: line-through;")
-        else:
-            self.original= f"{self.plugin_dir}/plantilla/Plantilla_3_34.qgz"
-            self.tabla_on_off.setStyle("text-decoration: None;")
+    def encender(self):
+        self.original= f"{self.plugin_dir}/plantilla/Plantilla_3_34.qgz"
+        self.dlg.tabla_on_off.setStyleSheet("text-decoration: line-through;")
+        self.composicion = {"nombre":"Escala 1:21 000 000"}
+        self.Copia="plantilla/copia_tmp"
+        self.limpiar()
 
+    def apagar(self):
+        self.original= f"{self.plugin_dir}/plantilla/Plantilla_3_34_tabla.qgz"
+        self.dlg.tabla_on_off.setStyleSheet("text-decoration: None;")
+        self.composicion = {"nombre":"Escala 1:31 000 000 Tabla"}
+        self.Copia="plantilla/copia_tmp"
+        self.limpiar()
+
+
+    def on_off(self,):
+        msg_tabla=QMessageBox(icon=QMessageBox.Icon(),text="El proyecto actual sera cambiado por uno nuevo.  ¿Está usted de aucerdo?")
+        msg_tabla.show()
+        msg_tabla.activateWindow()
+        mensaje = self.iface.messageBar().createMessage("El proyecto actual sera cambiado por uno nuevo.  ¿Está usted de aucerdo?")
+        btn_si = QPushButton(mensaje)
+        btn_si.setText("Si")
+        btn_si.pressed.connect(self.apagar if self.dlg.tabla_on_off.isChecked() else self.encender)
+        mensaje.layout().addWidget(btn_si)
+        self.iface.messageBar().pushWidget(mensaje,Qgis.Info)
+       
     
 
     def run(self):
@@ -451,22 +470,21 @@ class excel2mapa:
                 self.dlg.btnLimpiar.clicked.connect(self.limpiar)
                 self.dlg.selectMuni.currentTextChanged.connect(self.cargarMunicipios)
                 self.dlg.carpetaGuardar.fileChanged.connect(self.activaBtnMapa)
-                self.dlg.tabla_on_off.clicked.connect(self.activaTablaComposicion)
+                self.dlg.tabla_on_off.clicked.connect(self.on_off)
                 self.dlg.setWindowTitle("Generardor Mapas Tematicos")
         if self.first_start == True:
             self.first_start = False
             self.dlg = excel2mapaDialog()
             cargar(True)
         else:
-            act = self.dlg
-            if act.isVisible():
-                act.activateWindow() 
-                act.setFocus()
+            if self.dlg.isVisible():
+                self.dlg.activateWindow() 
+                self.dlg.setFocus()
             else:
                 cargar(False)
                 self.first_start == False
-                act.activateWindow() 
-                act.setFocus()
+                self.dlg.activateWindow() 
+                self.dlg.setFocus()
         result = self.dlg.exec_()
         if result==0:
             self.first_start = None

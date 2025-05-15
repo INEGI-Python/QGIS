@@ -9,8 +9,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>434</width>
-    <height>530</height>
+    <width>429</width>
+    <height>534</height>
    </rect>
   </property>
   <property name="font">
@@ -34,9 +34,9 @@
    <property name="geometry">
     <rect>
      <x>30</x>
-     <y>580</y>
+     <y>670</y>
      <width>431</width>
-     <height>241</height>
+     <height>151</height>
     </rect>
    </property>
    <property name="font">
@@ -61,7 +61,7 @@
     <enum>QFrame::NoFrame</enum>
    </property>
    <property name="currentIndex">
-    <number>1</number>
+    <number>0</number>
    </property>
    <widget class="QWidget" name="confi">
     <property name="geometry">
@@ -69,7 +69,7 @@
       <x>0</x>
       <y>0</y>
       <width>431</width>
-      <height>181</height>
+      <height>91</height>
      </rect>
     </property>
     <attribute name="icon">
@@ -86,7 +86,7 @@
       <x>0</x>
       <y>0</y>
       <width>431</width>
-      <height>181</height>
+      <height>91</height>
      </rect>
     </property>
     <attribute name="icon">
@@ -772,6 +772,8 @@ border-bottom-color: rgb(0, 0, 0);
      <bold>false</bold>
      <underline>false</underline>
      <strikeout>true</strikeout>
+     <stylestrategy>PreferAntialias</stylestrategy>
+     <kerning>false</kerning>
     </font>
    </property>
    <property name="cursor">
@@ -781,7 +783,9 @@ border-bottom-color: rgb(0, 0, 0);
     <string extracomment="La Composicion es generada con su tabla de datos"/>
    </property>
    <property name="styleSheet">
-    <string notr="true"/>
+    <string notr="true">text-decoration: line-through;
+border:None;
+background:None;</string>
    </property>
    <property name="text">
     <string>TABLA</string>
@@ -799,6 +803,9 @@ border-bottom-color: rgb(0, 0, 0);
    </property>
    <property name="checkable">
     <bool>true</bool>
+   </property>
+   <property name="autoDefault">
+    <bool>false</bool>
    </property>
   </widget>
  </widget>

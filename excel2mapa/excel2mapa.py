@@ -80,6 +80,7 @@ class excel2mapa:
         self.rutaGuardar=None
         self.composicion = {"nombre":"Escala 1:21 000 000"}
         self.first_start = None
+        self.datosTabla=None
 
     @property
     def Copia(self):
@@ -92,7 +93,6 @@ class excel2mapa:
     def tr(self, message):
         return QCoreApplication.translate('Excel2Mapa', message)
     
-    _+-ñ-0
     def categorizar_layer(self,lay,newCampos,proyect=QgsProject.instance()):
         capa = proyect.mapLayersByName(lay)[0]
         unique_values = self.datosAct[newCampos[0]].unique()
@@ -173,7 +173,7 @@ class excel2mapa:
         print(os.getcwd())
         os.system("rm -f plantilla/*_composicion.*")
         os.system("rm -f plantilla/copia_tmp.qgz")
-        self.Copia="plantilla/copia_tmp"
+        self.Copia="plantilla/copia_tmp"     
         self.load_qgz_project()
         return False
  
@@ -313,6 +313,10 @@ class excel2mapa:
         
         if limpio:
             aux = pan.read_excel(file,index_col=None,header=0,sheet_name="Datos")
+            aux.sort_values(by="Clase",inplace=True)
+            print(aux)
+            
+            self.datosTabla=aux.loc[:,["CVEGEO","Tabla"]].sort_values(by="CVEGEO",inplace=True) if "Tabla" in aux.columns else None
             self.dlg.tableWidget_2.setRowCount(len(aux.index))
             self.dlg.tableWidget_2.setColumnCount(len(aux.columns))
             self.dlg.tableWidget_2.setHorizontalHeaderLabels(aux.columns)
@@ -343,17 +347,20 @@ class excel2mapa:
         ls = proyecto.mapLayers()
         [proyecto.removeMapLayer(ls[l]) for l in ls.keys()  if ls[l].name()[0:10]=="Municipios" or ls[l].name()=="EstadosMexico"]            
         datos = geo.read_file(f"{ruta}/TemplateQgis_3_34.gpkg",layer=capa  if capa=="EstadosMexico" else f"{capa}_finales" ,columns=campos,encoding='utf-8') 
+        print(datos)
         datos["CVEGEO"] = datos["CVEGEO"].astype('Int64')
         datos.set_index('CVEGEO',inplace=True)
         union = datos.join(self.datosAct)
         union["Clase"]=union["Clase"].astype("Int64")
-        union.set_index("Clase")
-        union.sort_index(inplace=True)
+        #union.set_index("Clase")
+        #union.sort_index(inplace=True)
+        union.sort_values(by="Clase",inplace=True)
+        print(union)
         if os.path.exists(f"{ruta}/{capa}_composicion.shp"):
             os.system(f"rm -f  {ruta}/*_composicion.*")
         union.to_file(f"{ruta}/{capa}_composicion.shp")   
         proyecto.addMapLayer(QgsVectorLayer(f'{ruta}/{capa}_composicion.shp',capa),False)
-        proyecto.layerTreeRoot().insertLayer(4,proyecto.mapLayersByName(capa)[0])
+        proyecto.layerTreeRoot().insertLayer(6,proyecto.mapLayersByName(capa)[0])
         if capa=="EstadosMexico":
             self.dlg.selectMuni.enabled=False
         else:
@@ -370,6 +377,7 @@ class excel2mapa:
             os.startfile(export_path_pdf)
         def VerImg():
             os.startfile(export_path_img)
+
         proyect = QgsProject.instance()
         proxe =proyect.layoutManager()
         layout = proxe.layoutByName(self.composicion["nombre"])
@@ -383,11 +391,16 @@ class excel2mapa:
         legend.setAutoUpdateModel(False)
         root=legend.model().rootGroup()
         capas = proyect.mapLayers().values()
-        print(capas)
-        print(self.composicion)
         layerNuevo = [l for l in capas if l.name()==self.composicion["capa"]][0]
         root.removeAllChildren()
         root.addLayer(layerNuevo)
+        
+        try:
+            layerNuevo.dataProvider().setSortExpression("Clase")
+            layerNuevo.triggerRepaint()
+        except Exception as e:
+            print(e)
+
         legend.refresh()
         layout.refresh()
         layout.update()
@@ -409,7 +422,7 @@ class excel2mapa:
             boton_img.setText("Ver IMAGEN")
             boton_img.pressed.connect(VerImg)
             widget.layout().addWidget(boton_img)
-            self.iface.messageBar().pushWidget(widget, Qgis.Info,30)
+            self.iface.messageBar().pushWidget(widget, Qgis.Info,20)
             self.dlg.msgGuardado.setHidden(False)
         else:
             self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
@@ -428,34 +441,19 @@ class excel2mapa:
         else:
             self.dlg.btnMapa.setDisabled(True)
            
-
-    def encender(self):
-        self.original= f"{self.plugin_dir}/plantilla/Plantilla_3_34.qgz"
-        self.dlg.tabla_on_off.setStyleSheet("text-decoration: line-through;")
-        self.composicion = {"nombre":"Escala 1:21 000 000"}
-        self.Copia="plantilla/copia_tmp"
-        self.limpiar()
-
-    def apagar(self):
-        self.original= f"{self.plugin_dir}/plantilla/Plantilla_3_34_tabla.qgz"
-        self.dlg.tabla_on_off.setStyleSheet("text-decoration: None;")
-        self.composicion = {"nombre":"Escala 1:31 000 000 Tabla"}
-        self.Copia="plantilla/copia_tmp"
-        self.limpiar()
+    def cambiarComposicion(self):
+        visible=self.dlg.tabla_on_off.isChecked()        
+        self.composicion["nombre"] = "Escala 1:31 000 000 Tabla" if visible else  "Escala 1:21 000 000"
+        self.dlg.tabla_on_off.setStyleSheet(f"text-decoration: {'None' if visible else 'line-through'};")
+        proyect = QgsProject.instance()
+        capas = proyect.mapLayers().values()
+        for capa in capas:
+            if capa.name() == "Etiquetas estados" or capa.name() == "Nombreoceanoymar":
+                proyect.layerTreeRoot().findLayer(capa.id()).setItemVisibilityChecked(not visible)
+            if capa.name().endswith("_31"):
+                proyect.layerTreeRoot().findLayer(capa.id()).setItemVisibilityChecked(visible)
 
 
-    def on_off(self,):
-        msg_tabla=QMessageBox(icon=QMessageBox.Icon(),text="El proyecto actual sera cambiado por uno nuevo.  ¿Está usted de aucerdo?")
-        msg_tabla.show()
-        msg_tabla.activateWindow()
-        mensaje = self.iface.messageBar().createMessage("El proyecto actual sera cambiado por uno nuevo.  ¿Está usted de aucerdo?")
-        btn_si = QPushButton(mensaje)
-        btn_si.setText("Si")
-        btn_si.pressed.connect(self.apagar if self.dlg.tabla_on_off.isChecked() else self.encender)
-        mensaje.layout().addWidget(btn_si)
-        self.iface.messageBar().pushWidget(mensaje,Qgis.Info)
-       
-    
 
     def run(self):
         def cargar(ban):
@@ -470,12 +468,16 @@ class excel2mapa:
                 self.dlg.btnLimpiar.clicked.connect(self.limpiar)
                 self.dlg.selectMuni.currentTextChanged.connect(self.cargarMunicipios)
                 self.dlg.carpetaGuardar.fileChanged.connect(self.activaBtnMapa)
-                self.dlg.tabla_on_off.clicked.connect(self.on_off)
+                self.dlg.tabla_on_off.clicked.connect(self.cambiarComposicion)
                 self.dlg.setWindowTitle("Generardor Mapas Tematicos")
+
+        
         if self.first_start == True:
             self.first_start = False
             self.dlg = excel2mapaDialog()
             cargar(True)
+            self.dlg.activateWindow() 
+            self.dlg.setFocus()
         else:
             if self.dlg.isVisible():
                 self.dlg.activateWindow() 

@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication,QVariant
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QPushButton
-from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsVectorLayer,QgsExpressionContextUtils, QgsLayoutItemLegend,QgsLegendStyle
+from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsVectorLayer,QgsExpressionContextUtils, QgsLayoutItemLegend,QgsLayoutFrame
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QAction
 
@@ -45,6 +45,7 @@ import geopandas as geo
 import pandas as pan
 import os
 from datetime import datetime as dt
+import json
 
 hoy = dt.today()  
 #QgsExpressionContextUtils.setProjectVariable(QgsProject.instance(),"plugin_dir",os.path.dirname(__file__).replace("\\","/"))
@@ -136,7 +137,6 @@ class excel2mapa:
 
     
     def rampasColor(self):
-        import json
         with open(f"{self.plugin_dir}/plantilla/estilos-INEGI.json","r") as js:
             rampas = json.load(js)["colorramps"]
         self.colorRampa = [{"nombre": r["name"],"colores":r["colors"][:self.categorias]}  for r in rampas if ((len(r["colors"]))-1)/2 == self.categorias]
@@ -302,6 +302,9 @@ class excel2mapa:
             self.variables[v[0]] = v[1]
         try:
             self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
+            self.datosAct.sort_values(by="Clase",inplace=True)
+            print("***************  Datos Act **************")
+            print(self.datosAct)
         except Exception as e:
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene una hoja llamada Datos",Qgis.Critical,5)
             limpio= self.limpiar()
@@ -311,12 +314,11 @@ class excel2mapa:
             limpio=self.limpiar()
             return
         
+        print("if limpio",limpio)
         if limpio:
             aux = pan.read_excel(file,index_col=None,header=0,sheet_name="Datos")
-            aux.sort_values(by="Clase",inplace=True)
-            print(aux)
-            
             self.datosTabla=aux.loc[:,["CVEGEO","Tabla"]].sort_values(by="CVEGEO",inplace=True) if "Tabla" in aux.columns else None
+
             self.dlg.tableWidget_2.setRowCount(len(aux.index))
             self.dlg.tableWidget_2.setColumnCount(len(aux.columns))
             self.dlg.tableWidget_2.setHorizontalHeaderLabels(aux.columns)
@@ -330,9 +332,9 @@ class excel2mapa:
                 self.dlg.selectMuni.setEnabled(True)
             self.composicion["capa"] = self.unirDatos("EstadosMexico",['CVEGEO','CVE_ENT','NOMGEO',"NOM_ABR",'geometry'],f"Municipios_{self.año}") if len(self.datosAct.index)<=32 else self.unirDatos(f"Municipios_{self.año}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
             keys = list(self.datosAct.keys())
-            print(keys)
             if len(list(self.datosAct[keys[1]].unique())) == len(list(self.datosAct[keys[0]].unique())):
                 self.categorias = len(list(self.datosAct[keys[1]].unique()))
+                print(self.categorias,"-----",len(list(self.datosAct[keys[0]].unique())))
             else:
                 self.iface.messageBar().pushMessage("INEGI","La cantidad de Clases unicas difiere de la cantidad de Etiquetas unicas",Qgis.Critical,10)
                 self.limpiar()
@@ -388,6 +390,12 @@ class excel2mapa:
             if isinstance(i,QgsLayoutItemLegend):
                 legend = i
                 break
+        Tabla = [i for i in layout.items() if isinstance(i,QgsLayoutFrame)][0]
+        print(dir(Tabla))
+        
+        
+
+            
         legend.setAutoUpdateModel(False)
         root=legend.model().rootGroup()
         capas = proyect.mapLayers().values()

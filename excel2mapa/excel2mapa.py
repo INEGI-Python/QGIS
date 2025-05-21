@@ -25,7 +25,7 @@ from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication,QVariant
 from qgis.gui import QgsMessageBar
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QPushButton
-from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsVectorLayer,QgsExpressionContextUtils, QgsLayoutItemLegend,QgsLayoutFrame
+from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsVectorLayer,QgsExpressionContextUtils, QgsLayoutItemLegend,QgsLayoutFrame,QgsTableCell,QgsTextFormat
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QAction
 
@@ -79,7 +79,7 @@ class excel2mapa:
         self.rampaActual = None
         self.año = 2020
         self.rutaGuardar=None
-        self.composicion = {"nombre":"Escala 1:21 000 000"}
+        self.composicion = {"nombre":"Escala 1:21 000 000","capa":"EstadosMexico"}
         self.first_start = None
         self.datosTabla=None
 
@@ -303,8 +303,6 @@ class excel2mapa:
         try:
             self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
             self.datosAct.sort_values(by="Clase",inplace=True)
-            print("***************  Datos Act **************")
-            print(self.datosAct)
         except Exception as e:
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene una hoja llamada Datos",Qgis.Critical,5)
             limpio= self.limpiar()
@@ -314,10 +312,11 @@ class excel2mapa:
             limpio=self.limpiar()
             return
         
-        print("if limpio",limpio)
         if limpio:
             aux = pan.read_excel(file,index_col=None,header=0,sheet_name="Datos")
-            self.datosTabla=aux.loc[:,["CVEGEO","Tabla"]].sort_values(by="CVEGEO",inplace=True) if "Tabla" in aux.columns else None
+            if "Tabla" in aux.columns:
+                self.datosTabla=aux.loc[:,["CVEGEO","Tabla"]]
+                self.datosTabla.sort_values(by="CVEGEO",inplace=True)
 
             self.dlg.tableWidget_2.setRowCount(len(aux.index))
             self.dlg.tableWidget_2.setColumnCount(len(aux.columns))
@@ -330,7 +329,7 @@ class excel2mapa:
                 self.dlg.selectMuni.setDisabled(True)
             else:
                 self.dlg.selectMuni.setEnabled(True)
-            self.composicion["capa"] = self.unirDatos("EstadosMexico",['CVEGEO','CVE_ENT','NOMGEO',"NOM_ABR",'geometry'],f"Municipios_{self.año}") if len(self.datosAct.index)<=32 else self.unirDatos(f"Municipios_{self.año}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
+            self.unirDatos("EstadosMexico",['CVEGEO','CVE_ENT','NOMGEO',"NOM_ABR",'geometry'],f"Municipios_{self.año}") if len(self.datosAct.index)<=32 else self.unirDatos(f"Municipios_{self.año}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
             keys = list(self.datosAct.keys())
             if len(list(self.datosAct[keys[1]].unique())) == len(list(self.datosAct[keys[0]].unique())):
                 self.categorias = len(list(self.datosAct[keys[1]].unique()))
@@ -345,6 +344,7 @@ class excel2mapa:
             self.iface.messageBar().pushMessage("Cargando Excel","Los datos fueron cargados satisfactoriamente",Qgis.Info,2)
 
     def unirDatos(self,capa,campos,apagar="EstadosMexico",proyecto=QgsProject.instance()):
+        self.composicion["capa"] = capa
         ruta = f"{self.plugin_dir}/plantilla"
         ls = proyecto.mapLayers()
         [proyecto.removeMapLayer(ls[l]) for l in ls.keys()  if ls[l].name()[0:10]=="Municipios" or ls[l].name()=="EstadosMexico"]            
@@ -372,7 +372,6 @@ class excel2mapa:
             proyecto.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False) 
         except Exception as e:
             print(e)
-        return capa
 
     def crearComposicion(self):
         def VerPdf():
@@ -390,12 +389,28 @@ class excel2mapa:
             if isinstance(i,QgsLayoutItemLegend):
                 legend = i
                 break
-        Tabla = [i for i in layout.items() if isinstance(i,QgsLayoutFrame)][0]
-        print(dir(Tabla))
-        
-        
+       
+        marco = [i for i in layout.items() if isinstance(i,QgsLayoutFrame)][0]
+       
+        multiMarco = marco.multiFrame()
+        Tabla = multiMarco.tableContents()
+        for i in range(1,33):
+            new_cell = QgsTableCell(f"     {str(self.datosTabla.loc[i-1,"Tabla"])} ")
+            txt_format = QgsTextFormat()
+            txt_format.setFont(QFont('Times'))
+            txt_format.setSize(8)
+            txt_format.setColor(QColor(0, 0, 0))
+            new_cell.setTextFormat(txt_format)
+            Tabla[i if i< 17 else i-16][1 if i<17 else 3]=new_cell
+        multiMarco.setTableContents(Tabla)
+        layout.refresh()
+        layout.update()
 
             
+            #var=f"e0{i+1}" if i+1<10 else f"e{i+1}"
+            #QgsExpressionContextUtils.setLayoutVariable(layout,var, str(self.datosTabla.loc[i,"Tabla"]))
+        
+    
         legend.setAutoUpdateModel(False)
         root=legend.model().rootGroup()
         capas = proyect.mapLayers().values()
@@ -404,7 +419,7 @@ class excel2mapa:
         root.addLayer(layerNuevo)
         
         try:
-            layerNuevo.dataProvider().setSortExpression("Clase")
+           # layerNuevo.dataProvider().setSortExpression("Clase")
             layerNuevo.triggerRepaint()
         except Exception as e:
             print(e)

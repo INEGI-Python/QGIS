@@ -1,0 +1,22 @@
+capa="EstadosMexico"
+proyecto=QgsProject.instance()
+capaCompo = proyecto.mapLayersByName("EstadosMexico")[0]
+configura = QgsPalLayerSettings()
+configura.fieldName =  "NOM_ABR" if capa=="EstadosMexico" else "NOMGEO"
+textFormat = QgsTextFormat()
+textFormat.setColor(QColor("#FFFFFF") )
+textFormat.setSize(5)
+textFormat.setFont(QFont("Arial"))
+configura.setFormat(textFormat)
+root = QgsRuleBasedLabeling.Rule(QgsPalLayerSettings())
+rule = QgsRuleBasedLabeling.Rule(configura)
+rule.setDescription("negro")
+rule.setFilterExpression('"Clase" < 2')
+root.appendChild(rule)
+rules = QgsRuleBasedLabeling(root)
+print("****************  RULES  ****************")
+print(dir(rules))
+print (rules.settings())
+capaCompo.setLabeling(rules)
+capaCompo.setLabelsEnabled(True)
+capaCompo.triggerRepaint()

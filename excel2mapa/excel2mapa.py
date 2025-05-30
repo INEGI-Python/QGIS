@@ -22,19 +22,20 @@
  ***************************************************************************/
 """
 from qgis.PyQt.QtCore import QSettings, QTranslator, QCoreApplication,QVariant
-from qgis.gui import QgsMessageBar
+from qgis.gui import QgsMessageBar   
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction,QMessageBox,QTableWidgetItem,QPushButton
-from qgis.core import  QgsProject,  QgsLayoutExporter, Qgis,QgsVectorLayer,QgsExpressionContextUtils, QgsLayoutItemLegend,QgsLayoutFrame,QgsTableCell,QgsTextFormat
+from qgis.core import  (
+    QgsProject,QgsLayoutExporter,QgsRuleBasedLabeling,Qgis,QgsVectorLayer,QgsExpressionContextUtils,QgsExpression,QgsLayoutItemLegend,QgsLayoutFrame,QgsProperty,QgsPropertyCollection,
+    QgsTextFormat,QgsRendererCategory,QgsCategorizedSymbolRenderer,QgsSymbol,QgsPalLayerSettings,QgsRuleBasedRenderer,QgsRendererRange,QgsVectorLayerSimpleLabeling
+                                    )
 from qgis.PyQt.QtCore import QCoreApplication
 from qgis.PyQt.QtWidgets import QAction
 
 
-from qgis.core import (
-    QgsRendererCategory,
-    QgsCategorizedSymbolRenderer,
-    QgsSymbol
-)
+
+
+
 from PyQt5.QtGui import QColor,QFont
 
 from .resources import *
@@ -77,11 +78,16 @@ class excel2mapa:
         self.categorias = None
         self.colorRampa = []
         self.rampaActual = None
+        self.labelActual = []
         self.año = 2020
         self.rutaGuardar=None
         self.composicion = {"nombre":"Escala 1:21 000 000","capa":"EstadosMexico"}
+        self.capa = "EstadosMexico"
+        self.apagar = None
         self.first_start = None
         self.datosTabla=None
+        self.proyecto=None
+        self.plantilla=f"{self.plugin_dir}/plantilla"
 
     @property
     def Copia(self):
@@ -95,56 +101,87 @@ class excel2mapa:
         return QCoreApplication.translate('Excel2Mapa', message)
     
     def categorizar_layer(self,lay,newCampos,proyect=QgsProject.instance()):
-        capa = proyect.mapLayersByName(lay)[0]
         unique_values = self.datosAct[newCampos[0]].unique()
         categories = []
-        for value, color in zip(unique_values,self.rampaActual):
-            color = ''.join([f'{int(c):02X}' for c in color.split(",")[:3]])
-            symbol = QgsSymbol.defaultSymbol(capa.geometryType())
+        for value, color  in zip(unique_values,self.rampaActual):
+            #color = ''.join([f'{int(c):02X}' for c in color.split(",")[:3]])
+            symbol = QgsSymbol.defaultSymbol(lay.geometryType())
             symbol.setColor(QColor(f"#{color}"))  # Set color as needed
-            if lay=="EstadosMexico":
+
+            if self.capa=="EstadosMexico":
                 symbol.symbolLayer(0).setStrokeColor(QColor(f"#{color}"))
                 symbol.symbolLayer(0).setStrokeWidth(0.01)
             else:
                 symbol.symbolLayer(0).setStrokeColor(QColor("#505255"))
                 symbol.symbolLayer(0).setStrokeWidth(0.1)
+            
+            
             category = QgsRendererCategory(value, symbol, str(value))
+
             categories.append(category)
         renderer = QgsCategorizedSymbolRenderer(newCampos[0][:10], categories)
-        capa.setRenderer(renderer)  
-        capa.triggerRepaint()
+        lay.setRenderer(renderer)  
+        lay.triggerRepaint()
     
     
     def seleccRampa(self):
         color = next(
             (
-                r["colores"]
+                [{"c":c["hex"],"l":c["label"]}  for c in  r["colores"]]
                 for r in self.colorRampa
                 if r["nombre"] == self.dlg.comboRampas.currentText()
             ),
             [],
         )
-        self.rampaActual = color
+       # print(self.colorRampa)
+        #label = [ [c["label"]  for c in  r["colores"]]  for r in self.colorRampa if r["nombre"] == self.dlg.comboRampas.currentText()]
+
+        self.rampaActual = [c.get("c") for c in color]
+        self.labelActual = [c.get("l") for c in color]
+        print("COLOR:  ",self.rampaActual)
+        print("LABEL:  ",self.labelActual)
         self.limpiaRampas(6)
+
+
         for i in range(len(color)):
-            eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:rgba({color[i]});')")
+            eval(f"self.dlg.rampa{i+1}.setStyleSheet('background-color:#{self.rampaActual[i]};')")
             eval(f"self.dlg.rampa{i+1}.setText('{i+1}')")
         
         if self.first_start  is not None:
             print("first_start","\t\t",self.first_start)
             newCampos= list(self.datosAct.keys())
-            self.categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}",newCampos)
+           # capa=f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}"
+            
+            lay = self.proyecto.mapLayersByName(self.capa)[0]
+            self.proyecto.removeMapLayer(lay)
+
+
+            self.proyecto.addMapLayer(QgsVectorLayer(f'{self.plantilla}/{self.capa}_composicion.shp',self.capa),False)
+            lay = self.proyecto.mapLayersByName(self.capa)[0]
+            self.proyecto.layerTreeRoot().insertLayer(4,lay)
+            self.categorizar_layer(lay,newCampos)
+            self.etiquetarxRegla(lay)
 
     
     def rampasColor(self):
         with open(f"{self.plugin_dir}/plantilla/estilos-INEGI.json","r") as js:
             rampas = json.load(js)["colorramps"]
-        self.colorRampa = [{"nombre": r["name"],"colores":r["colors"][:self.categorias]}  for r in rampas if ((len(r["colors"]))-1)/2 == self.categorias]
+        self.colorRampa = [{"nombre": r["name"],"colores":r["colors"]}  for r in rampas if len(r["colors"]) == self.categorias]
         self.dlg.comboRampas.clear()
         for rampa in self.colorRampa:
             self.dlg.comboRampas.addItem(rampa["nombre"])
         newCampos= list(self.datosAct.keys())
-        self.categorizar_layer(f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}",newCampos)
+
+
+        # lay = self.proyecto.mapLayersByName(self.capa)[0]
+        # self.proyecto.removeMapLayer(lay)
+        # self.proyecto.layerTreeRoot().insertLayer(4,lay)
+
+
+        self.capa=f"EstadosMexico" if len(self.datosAct.index)<=32 else f"Municipios_{self.año}"
+        lay = self.proyecto.mapLayersByName(self.capa)[0]
+        self.categorizar_layer(lay,newCampos)
+        self.etiquetarxRegla(lay)
 
     def limpiaRampas(self,cant):
         for i in range(cant):
@@ -166,9 +203,8 @@ class excel2mapa:
         self.dlg.carpetaGuardar.setFilePath("")
         self.dlg.msgGuardado.setHidden(True)
         self.dlg.selectMuni.setDisabled(True)
-        proy= QgsProject.instance()
-        proy.removeAllMapLayers()
-        proy.clear()
+        self.proyecto.removeAllMapLayers()
+        self.proyecto.clear()
         os.chdir(self.plugin_dir.replace("\\","/"))
         print(os.getcwd())
         os.system("rm -f plantilla/*_composicion.*")
@@ -177,7 +213,7 @@ class excel2mapa:
         self.load_qgz_project()
         return False
  
-
+#################################################
     def add_action(self,icon_path, text,callback,enabled_flag=True,add_to_menu=True,add_to_toolbar=True, status_tip=None, whats_this=None, parent=None):
         """Add a toolbar icon to the toolbar.
 
@@ -241,7 +277,7 @@ class excel2mapa:
         self.actions.append(action)
 
         return action
-
+#################################################
     def initGui(self):
         """Create the menu entries and toolbar icons inside the QGIS GUI."""
 
@@ -255,9 +291,9 @@ class excel2mapa:
 
         print("initGUI-antes ",self.first_start)
         self.first_start = True
-        print("initGUI-antes ",self.first_start)
+        print("initGUI-despues ",self.first_start)
 
-
+#################################################
     def unload(self):
         """Removes the plugin menu item and icon from QGIS GUI."""
         for action in self.actions:
@@ -265,16 +301,17 @@ class excel2mapa:
                 self.tr(u'&Excel 2 Mapa'),
                 action)
             self.iface.removeToolBarIcon(action)
-    
+    #################################################
     def load_qgz_project(self):
         if os.path.exists(self.Copia) and QgsProject.instance().read(self.Copia):
+            self.proyecto=QgsProject.instance()
             self.dlg.activateWindow() 
             self.dlg.setFocus()
             self.iface.messageBar().pushMessage("INEGI","Proyecto cargado satisfactoriamente",Qgis.Info,1)
             return True
         self.iface.messageBar().pushMessage("INEGI","Error al cargar el proyecto",Qgis.Critical,5)
         return False
-    
+    #################################################
     def validar(self,file):
         limpio=True
         if not file:
@@ -302,8 +339,13 @@ class excel2mapa:
             self.variables[v[0]] = v[1]
         try:
             self.datosAct = pan.read_excel(file,index_col=0,header=0,sheet_name="Datos")
+            #self.datosAct["Categoria"] = self.datosAct["Categoria"].astype(str)
+            for i in self.datosAct.index:
+                print (self.datosAct.loc[i,"Categoria"])
+                self.datosAct.loc[i,"Categoria"]= self.datosAct.loc[i,"Categoria"].strip()
             self.datosAct.sort_values(by="Clase",inplace=True)
         except Exception as e:
+            print(e)
             self.iface.messageBar().pushMessage("INEGI","El archivo no contiene una hoja llamada Datos",Qgis.Critical,5)
             limpio= self.limpiar()
             return 
@@ -326,11 +368,16 @@ class excel2mapa:
                     self.dlg.tableWidget_2.setItem(i, j, QTableWidgetItem(str(aux.iat[i, j])))
 
             if len(self.datosAct.index)==32:
+                self.capa="EstadosMexico"
+                self.apagar=f"Municipios_{self.año}"
                 self.dlg.selectMuni.setDisabled(True)
             else:
+                self.capa = f"Municipios_{self.año}"
+                self.apagar = "EstadosMexico"
                 self.dlg.selectMuni.setEnabled(True)
-            self.unirDatos("EstadosMexico",['CVEGEO','CVE_ENT','NOMGEO',"NOM_ABR",'geometry'],f"Municipios_{self.año}") if len(self.datosAct.index)<=32 else self.unirDatos(f"Municipios_{self.año}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
-            keys = list(self.datosAct.keys())
+
+            self.unirDatos() #['CVEGEO','CVE_ENT','NOMGEO','NOM_ABR','geometry','POINT_X','POINT_Y '])
+            keys=list(self.datosAct.keys())
             if len(list(self.datosAct[keys[1]].unique())) == len(list(self.datosAct[keys[0]].unique())):
                 self.categorias = len(list(self.datosAct[keys[1]].unique()))
                 print(self.categorias,"-----",len(list(self.datosAct[keys[0]].unique())))
@@ -342,42 +389,70 @@ class excel2mapa:
             self.dlg.carpetaGuardar.setFilePath("")
             self.dlg.msgGuardado.setHidden(True)
             self.iface.messageBar().pushMessage("Cargando Excel","Los datos fueron cargados satisfactoriamente",Qgis.Info,2)
-
-    def unirDatos(self,capa,campos,apagar="EstadosMexico",proyecto=QgsProject.instance()):
-        self.composicion["capa"] = capa
-        ruta = f"{self.plugin_dir}/plantilla"
-        ls = proyecto.mapLayers()
-        [proyecto.removeMapLayer(ls[l]) for l in ls.keys()  if ls[l].name()[0:10]=="Municipios" or ls[l].name()=="EstadosMexico"]            
-        datos = geo.read_file(f"{ruta}/TemplateQgis_3_34.gpkg",layer=capa  if capa=="EstadosMexico" else f"{capa}_finales" ,columns=campos,encoding='utf-8') 
+    #################################################
+    def etiquetarxRegla(self,lay):
+        print("******************   LABELS ******************")
+        etiquetas=self.labelActual
+        root = QgsRuleBasedLabeling.Rule(QgsPalLayerSettings())
+        pc = QgsPropertyCollection('qpc')
+        x_prop = QgsProperty()
+        x_prop.setField("POINT_X")
+        pc.setProperty(9,x_prop)
+        
+        y_prop = QgsProperty()
+        y_prop.setField("POINT_Y")
+        pc.setProperty(10,y_prop)
+        for i in range(len(etiquetas)):
+            configura = QgsPalLayerSettings()
+            configura.setDataDefinedProperties(pc)
+            configura.enabled=True
+            configura.fieldName =  "NOM_ABR" if self.capa=="EstadosMexico" else "NOMGEO"
+            configura.LabelPlacement = 3
+            textFormat = QgsTextFormat()
+            textFormat.setColor(QColor("#FFFFFF" if etiquetas[i]=="blanco" else "#000000") )
+            textFormat.setSize(5)
+            textFormat.setFont(QFont("Arial"))
+            configura.setFormat(textFormat)
+            rule = QgsRuleBasedLabeling.Rule(configura)
+            rule.setDescription(f"{etiquetas[i]}{i+1}")
+            rule.setFilterExpression(f'"Clase" = {i+1}')
+            root.appendChild(rule)
+        rules = QgsRuleBasedLabeling(root)
+        lay.setLabeling(rules)
+        lay.setLabelsEnabled(True)
+        lay.triggerRepaint()
+   #################################################
+    def unirDatos(self):      
+        datos = geo.read_file(f"{self.plantilla}/TemplateQgis_3_34.gpkg",layer=self.capa  if self.capa=="EstadosMexico" else f"{self.capa}_finales" ,encoding='utf-8') 
         print(datos)
         datos["CVEGEO"] = datos["CVEGEO"].astype('Int64')
         datos.set_index('CVEGEO',inplace=True)
         union = datos.join(self.datosAct)
         union["Clase"]=union["Clase"].astype("Int64")
-        #union.set_index("Clase")
-        #union.sort_index(inplace=True)
+  
         union.sort_values(by="Clase",inplace=True)
-        print(union)
-        if os.path.exists(f"{ruta}/{capa}_composicion.shp"):
-            os.system(f"rm -f  {ruta}/*_composicion.*")
-        union.to_file(f"{ruta}/{capa}_composicion.shp")   
-        proyecto.addMapLayer(QgsVectorLayer(f'{ruta}/{capa}_composicion.shp',capa),False)
-        proyecto.layerTreeRoot().insertLayer(6,proyecto.mapLayersByName(capa)[0])
-        if capa=="EstadosMexico":
-            self.dlg.selectMuni.enabled=False
-        else:
-            self.dlg.selectMuni.enabled=True
+        if os.path.exists(f"{self.plantilla}/{self.capa}_composicion.shp"):
+            os.system(f"rm -f  {self.plantilla}/*_composicion.*")
+        lay = self.proyecto.mapLayersByName(self.capa)[0]
+        self.proyecto.removeMapLayer(lay) 
+        union.to_file(f"{self.plantilla}/{self.capa}_composicion.shp")   
+        self.proyecto.addMapLayer(QgsVectorLayer(f'{self.plantilla}/{self.capa}_composicion.shp',self.capa),False)
+        self.proyecto.layerTreeRoot().insertLayer(4,self.proyecto.mapLayersByName(self.capa)[0])
         try:
-            capApagada = proyecto.mapLayersByName(apagar)[0]
-            proyecto.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False) 
+            capApagada = self.proyecto.mapLayersByName(self.apagar)[0]
+            self.proyecto.layerTreeRoot().findLayer(capApagada.id()).setItemVisibilityChecked(False) 
         except Exception as e:
             print(e)
-
+    #################################################
     def crearComposicion(self):
         def VerPdf():
             os.startfile(export_path_pdf)
         def VerImg():
             os.startfile(export_path_img)
+        
+        if self.dlg.tabla_on_off.isChecked() and self.datosTabla is None:
+                 self.iface.messageBar().pushMessage("INEGI", "En los datos utilizados NO se encontro la columna con el nombre 'Tabla'. Se creara un mapa sin tabla. ", Qgis.Info, 10)
+                 self.dlg.tabla_on_off.click()
 
         proyect = QgsProject.instance()
         proxe =proyect.layoutManager()
@@ -389,40 +464,21 @@ class excel2mapa:
             if isinstance(i,QgsLayoutItemLegend):
                 legend = i
                 break
-       
-        marco = [i for i in layout.items() if isinstance(i,QgsLayoutFrame)][0]
-       
-        multiMarco = marco.multiFrame()
-        Tabla = multiMarco.tableContents()
-        for i in range(1,33):
-            new_cell = QgsTableCell(f"     {str(self.datosTabla.loc[i-1,"Tabla"])} ")
-            txt_format = QgsTextFormat()
-            txt_format.setFont(QFont('Times'))
-            txt_format.setSize(8)
-            txt_format.setColor(QColor(0, 0, 0))
-            new_cell.setTextFormat(txt_format)
-            Tabla[i if i< 17 else i-16][1 if i<17 else 3]=new_cell
-        multiMarco.setTableContents(Tabla)
-        layout.refresh()
-        layout.update()
+        marco = [i for i in layout.items() if isinstance(i,QgsLayoutFrame)]
+        if len(marco)>0:
+            multiMarco = marco[0].multiFrame()
+            Tabla = multiMarco.tableContents()
+            for i in range(1,33):
+                Tabla[i if i< 17 else i-16][1 if i<17 else 3].setContent(f"       {str(self.datosTabla.loc[i-1,"Tabla"])} ")
+            multiMarco.setTableContents(Tabla)
 
-            
-            #var=f"e0{i+1}" if i+1<10 else f"e{i+1}"
-            #QgsExpressionContextUtils.setLayoutVariable(layout,var, str(self.datosTabla.loc[i,"Tabla"]))
-        
-    
         legend.setAutoUpdateModel(False)
         root=legend.model().rootGroup()
         capas = proyect.mapLayers().values()
         layerNuevo = [l for l in capas if l.name()==self.composicion["capa"]][0]
         root.removeAllChildren()
         root.addLayer(layerNuevo)
-        
-        try:
-           # layerNuevo.dataProvider().setSortExpression("Clase")
-            layerNuevo.triggerRepaint()
-        except Exception as e:
-            print(e)
+        layerNuevo.triggerRepaint()
 
         legend.refresh()
         layout.refresh()
@@ -450,31 +506,32 @@ class excel2mapa:
         else:
             self.iface.messageBar().pushMessage("INEGI", "Error al exportar el mapa a PDF", Qgis.Critical, 5)
   
-
+#################################################
     def cargarMunicipios(self,year):
         self.unirDatos(f"Municipios_{year}",['CVEGEO','CVE_ENT','CVE_MUN','NOMGEO','geometry'])
         self.año = year
         self.composicion["capa"]=f"Municipios_{year}"
         self.seleccRampa()
-
+#################################################
     def activaBtnMapa(self,valor):
         if os.path.exists(valor):
             self.dlg.btnMapa.setEnabled(True)
             self.rutaGuardar = valor
         else:
             self.dlg.btnMapa.setDisabled(True)
-           
+   #################################################        
     def cambiarComposicion(self):
         visible=self.dlg.tabla_on_off.isChecked()        
-        self.composicion["nombre"] = "Escala 1:31 000 000 Tabla" if visible else  "Escala 1:21 000 000"
+        self.composicion["nombre"] = "Escala 1:21 000 000_Tabla" if visible else  "Escala 1:21 000 000"
         self.dlg.tabla_on_off.setStyleSheet(f"text-decoration: {'None' if visible else 'line-through'};")
-        proyect = QgsProject.instance()
-        capas = proyect.mapLayers().values()
-        for capa in capas:
-            if capa.name() == "Etiquetas estados" or capa.name() == "Nombreoceanoymar":
-                proyect.layerTreeRoot().findLayer(capa.id()).setItemVisibilityChecked(not visible)
-            if capa.name().endswith("_31"):
-                proyect.layerTreeRoot().findLayer(capa.id()).setItemVisibilityChecked(visible)
+       
+        # proyect = QgsProject.instance()
+        # capas = proyect.mapLayers().values()
+        # for capa in capas:
+        #     if capa.name() == "Etiquetas estados" or capa.name() == "Nombreoceanoymar":
+        #         proyect.layerTreeRoot().findLayer(capa.id()).setItemVisibilityChecked(not visible)
+        #     if capa.name().endswith("_31"):
+        #         proyect.layerTreeRoot().findLayer(capa.id()).setItemVisibilityChecked(visible)
 
 
 
@@ -482,8 +539,9 @@ class excel2mapa:
         def cargar(ban):
             self.dlg.show()
             self.dlg.msgGuardado.setHidden(True)
-            self.limpiar()
             if ban:
+                self.Copia="plantilla/copia_tmp" 
+                self.load_qgz_project()
                 self.dlg.mQgsFileWidget.setFilter("Excel (*.xls *.xlsx)")
                 self.dlg.mQgsFileWidget.fileChanged.connect(self.validar)
                 self.dlg.comboRampas.currentTextChanged.connect(self.seleccRampa)
